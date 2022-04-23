@@ -1,77 +1,56 @@
-from functools import lru_cache, partial
-from pathlib import Path
-import os
-import shutil
-
 from pytest import fixture, mark
-from sqlalchemy.engine import Engine
-from sqlmodel import Session, create_engine
 
 from app import service
 from app.model import UnknownArtist
 
 
-@lru_cache
 @fixture
-def in_memory_engine():
-    dsn = "sqlite:///:memory"
-    engine = create_engine(dsn, echo=True)
-    return engine
-
-
-@fixture
-def sessionmaker(in_memory_engine: Engine):
-    partial_func = partial(Session, in_memory_engine)
-    return partial_func
-
-
-@fixture
-def raw_album_with_one_song():
+def raw_album_with_one_song() -> service.OsWalkResult:
+    music_path = "/testdata"
     album_name = "test album"
-    test_album_path_name = f"./tests/testdata/{album_name}"
-    test_songs_names = [
-        "01 - First song.flac",
+    walk_result = [
+        (
+            f"{music_path}/{album_name}",
+            [],
+            ["01 - First song.flac"],
+        )
     ]
-    os.makedirs(test_album_path_name)
-    for song_path_name in test_songs_names:
-        song_path = Path(os.path.join(test_album_path_name, song_path_name))
-        song_path.touch()
-    yield Path(test_album_path_name).absolute()
-    shutil.rmtree(test_album_path_name)
+    return iter(walk_result)
 
 
 @fixture
-def raw_artist_with_one_album_with_artist_in_dir_name_with_one_song():
+def raw_artist_with_one_album_with_artist_in_dir_name_with_one_song() -> service.OsWalkResult:
+    music_path = "/testdata"
+    artist_name = "test artist"
+    album_year = "1986"
+    album_name = "test album"
+    walk_result = [
+        (
+            f"{music_path}/{artist_name} - {album_year} - {album_name}",
+            [],
+            ["01 - First song.flac"],
+        )
+    ]
+    return iter(walk_result)
+
+
+@fixture
+def raw_artist_with_one_album_with_one_song() -> service.OsWalkResult:
+    music_path = "/testdata"
     artist_name = "test artist"
     album_name = "test album"
-    test_album_path_name = f"./tests/testdata/{artist_name} - 1986 - {album_name}"
-    test_songs_names = [
-        "01 - First song.flac",
+    walk_result = [
+        (
+            f"{music_path}/{artist_name}/{album_name}",
+            [],
+            ["01 - First song.flac"],
+        )
     ]
-    os.makedirs(test_album_path_name)
-    for song_path_name in test_songs_names:
-        song_path = Path(os.path.join(test_album_path_name, song_path_name))
-        song_path.touch()
-    yield Path(test_album_path_name).absolute()
-    shutil.rmtree(test_album_path_name)
+    return iter(walk_result)
 
 
-@fixture
-def raw_artist_with_one_album_with_one_song():
-    artist_name = "test artist"
-    album_name = "test_album"
-    test_artist_path_name = f"./tests/testdata/{artist_name}"
-    test_album_path_name = os.path.join(test_artist_path_name, album_name)
-    song_file_name = "01 - First song.flac"
-    os.makedirs(test_album_path_name)
-    song_path = Path(os.path.join(test_album_path_name, song_file_name))
-    song_path.touch()
-    yield Path(test_album_path_name).absolute()
-    shutil.rmtree(test_artist_path_name)
-
-
-@mark.component
-def test_gather_album_with_one_song(raw_album_with_one_song: Path):
+@mark.unit
+def test_gather_album_with_one_song(raw_album_with_one_song: service.OsWalkResult):
     songs = service.gather_songs(raw_album_with_one_song)
     assert songs._songs[0].artist is UnknownArtist
     assert songs._songs[0].album.name == "test album"
@@ -80,9 +59,9 @@ def test_gather_album_with_one_song(raw_album_with_one_song: Path):
     assert not songs.is_empty()
 
 
-@mark.component
+@mark.unit
 def test_gather_album_with_artist_in_dir_name_with_one_song(
-    raw_artist_with_one_album_with_artist_in_dir_name_with_one_song: Path,
+    raw_artist_with_one_album_with_artist_in_dir_name_with_one_song: service.OsWalkResult,
 ):
     songs = service.gather_songs(
         raw_artist_with_one_album_with_artist_in_dir_name_with_one_song
@@ -94,9 +73,11 @@ def test_gather_album_with_artist_in_dir_name_with_one_song(
     assert not songs.is_empty()
 
 
-@mark.component
+@mark.unit
 @mark.skip("Not implemented")
-def test_gather_artist_with_one_album(raw_artist_with_one_album_with_one_song: Path):
+def test_gather_artist_with_one_album(
+    raw_artist_with_one_album_with_one_song: service.OsWalkResult,
+):
     songs = service.gather_songs(raw_artist_with_one_album_with_one_song)
     assert songs._songs[0].artist.name == "test artist"
     assert songs._songs[0].album.name == "test album"

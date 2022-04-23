@@ -1,9 +1,8 @@
 import os
 import re
-from collections import namedtuple
 from functools import partial
 from pathlib import Path
-from typing import List, Optional, Tuple, Dict
+from typing import Iterator, List, Optional, Tuple, Dict
 
 from sqlmodel import Session
 
@@ -11,6 +10,8 @@ from app.model import Album, Artist, Song, UnknownArtist
 
 SUPPORTED_MUSIC_EXTENSIONS = ["flac", "mp3", "wav"]
 
+# Damn, os.walk has quite the result. And this is the simplified version 😵
+OsWalkResult = Iterator[Tuple[str, List[str], List[str]]]
 
 class Importable:
     def __init__(self):
@@ -35,16 +36,27 @@ class Importable:
 
 
 def import_songs(music_path: Path, sessionmaker: partial[Session]):
-    importable = gather_songs(music_path)
-
-
-def gather_songs(music_path: Path) -> Importable:
-    importable = Importable()
     if not music_path.exists():
         raise ValueError("Path given does not exist")
     if not music_path.is_dir():
         raise ValueError("Path is not a directory")
-    for dirpath, _, filenames in os.walk(str(music_path)):
+    music_path = music_path.absolute()
+    walk_result: OsWalkResult = os.walk(str(music_path))
+    importable = gather_songs(walk_result)
+    songs_ready_for_import = gather_data(importable)
+    with sessionmaker() as session:
+        for song in songs_ready_for_import:
+            session.add(song)
+        session.commit()
+
+
+def gather_data(importable: Importable) -> List[Song]:
+    return list(importable._songs)
+
+
+def gather_songs(walked_path: OsWalkResult) -> Importable:
+    importable = Importable()
+    for dirpath, _, filenames in walked_path:
         for filename in filenames:
             if extension(filename) in SUPPORTED_MUSIC_EXTENSIONS:
                 path_basename = os.path.basename(dirpath)
@@ -54,7 +66,7 @@ def gather_songs(music_path: Path) -> Importable:
                     title=song_title,
                     path=Path(dirpath + "/" + filename),
                     album_name=folder_dict["album"],
-                    artist_name=folder_dict.get("artist", None)
+                    artist_name=folder_dict.get("artist", None),
                 )
 
     if importable.is_empty():
