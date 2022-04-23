@@ -8,7 +8,7 @@ from sqlalchemy.engine import Engine
 from sqlmodel import Session, create_engine
 
 from app import service
-from app.model import Album, Artist, Song, UnknownArtist
+from app.model import UnknownArtist
 
 
 @lru_cache
@@ -70,6 +70,7 @@ def raw_artist_with_one_album_with_one_song():
     shutil.rmtree(test_artist_path_name)
 
 
+@mark.component
 def test_gather_album_with_one_song(raw_album_with_one_song: Path):
     songs = service.gather_songs(raw_album_with_one_song)
     assert songs._songs[0].artist is UnknownArtist
@@ -79,6 +80,7 @@ def test_gather_album_with_one_song(raw_album_with_one_song: Path):
     assert not songs.is_empty()
 
 
+@mark.component
 def test_gather_album_with_artist_in_dir_name_with_one_song(
     raw_artist_with_one_album_with_artist_in_dir_name_with_one_song: Path,
 ):
@@ -92,6 +94,7 @@ def test_gather_album_with_artist_in_dir_name_with_one_song(
     assert not songs.is_empty()
 
 
+@mark.component
 @mark.skip("Not implemented")
 def test_gather_artist_with_one_album(raw_artist_with_one_album_with_one_song: Path):
     songs = service.gather_songs(raw_artist_with_one_album_with_one_song)

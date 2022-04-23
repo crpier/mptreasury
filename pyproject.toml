@@ -18,3 +18,13 @@ memray = "^1.0.3"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+log_cli = true
+log_cli_level = "INFO"
+markers = [
+  "unit: self explanatory I think",
+  "component: self explanatory I think",
+  "e2e: self explanatory I think",
+]
+
