@@ -44,7 +44,7 @@ class Artist(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(index=True)
 
-    albums: List[Album] = Relationship(back_populates="album")
+    albums: List[Album] = Relationship(back_populates="artist")
     songs: List[Song] = Relationship(back_populates="artist")
 
 

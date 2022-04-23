@@ -39,33 +39,37 @@ def import_songs(music_path: Path, sessionmaker: partial[Session]):
 
 
 def gather_songs(music_path: Path) -> Importable:
-    songs = []
     importable = Importable()
     if not music_path.exists():
         raise ValueError("Path given does not exist")
     if not music_path.is_dir():
         raise ValueError("Path is not a directory")
-    for dirpath, dirnames, filenames in os.walk(str(music_path)):
-        if dirpath == str(music_path):
-            pass
+    for dirpath, _, filenames in os.walk(str(music_path)):
         for filename in filenames:
             if extension(filename) in SUPPORTED_MUSIC_EXTENSIONS:
-                info_path = dirpath.split(str(music_path))[1:]
-                if len(info_path[0].split("/")) == 1:
-                    parse_folder_name(info_path[0])
-                    song_title = parse_song_file_name(filename)
+                path_basename = os.path.basename(dirpath)
+                folder_dict = parse_folder_name(path_basename)
+                song_title = parse_song_file_name(filename)
+                importable.add_song(
+                    title=song_title,
+                    path=Path(dirpath + "/" + filename),
+                    album_name=folder_dict["album"],
+                    artist_name=folder_dict.get("artist", None)
+                )
 
+    if importable.is_empty():
+        raise ValueError("no valid songs in path")
     return importable
 
 
 def parse_song_file_name(song_file_name) -> str:
     # Order matters, only the first match is used
-    validator_regexes = [r"^[0-9 -]+(.+)$"]
+    validator_regexes = [r"^[0-9 -]+(.+)\..+$"]
     for validator in validator_regexes:
-        match = re.search(song_file_name, validator)
+        match = re.search(validator, song_file_name)
         if match:
             song_title = match.groups()[0]
-            return song_title
+            return song_title.strip()
     raise ValueError("Invalid song file name")
 
 
@@ -74,6 +78,7 @@ def parse_folder_name(path: str) -> Dict[str, str]:
     validator_regexes = [
         (r"^(.+)\(.+\)$", ("album",)),
         (r"^([A-z0-9 ]+).*?(\d+).*?([A-z0-9 ]+)$", ("artist", "year", "album")),
+        (r"^(.+)$", ("album",)),
     ]
     validator: Tuple[str, Tuple]
     for validator in validator_regexes:
@@ -81,12 +86,12 @@ def parse_folder_name(path: str) -> Dict[str, str]:
         if match:
             results = {}
             for name, value in zip(validator[1], match.groups()):
-                results[name] = value
+                results[name] = value.strip()
             return results
     raise ValueError("Unrecognizable folder name")
 
 
 def extension(file: str):
     """Returns the extension without the leading dot (e.g. `flac`)"""
-    ext = file.rsplit(",", 1)[-1]
+    ext = file.rsplit(".", 1)[-1]
     return ext
