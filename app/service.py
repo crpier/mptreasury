@@ -4,7 +4,6 @@ from functools import partial
 from pathlib import Path
 from typing import Iterator, List, Optional, Tuple, Dict
 
-from sqlmodel import Session
 
 from app.model import Album, Artist, Song, UnknownArtist
 
@@ -12,6 +11,7 @@ SUPPORTED_MUSIC_EXTENSIONS = ["flac", "mp3", "wav"]
 
 # Damn, os.walk has quite the result. And this is the simplified version 😵
 OsWalkResult = Iterator[Tuple[str, List[str], List[str]]]
+
 
 class Importable:
     def __init__(self):
@@ -34,6 +34,9 @@ class Importable:
     def is_empty(self):
         return self._emtpy
 
+    def get_songs(self):
+        for song in self._songs:
+            yield song
 
 def import_songs(music_path: Path, sessionmaker: partial[Session]):
     if not music_path.exists():
@@ -43,15 +46,26 @@ def import_songs(music_path: Path, sessionmaker: partial[Session]):
     music_path = music_path.absolute()
     walk_result: OsWalkResult = os.walk(str(music_path))
     importable = gather_songs(walk_result)
-    songs_ready_for_import = gather_data(importable)
+    songs_ready_for_import = do_import(importable, sessionmaker=sessionmaker)
     with sessionmaker() as session:
         for song in songs_ready_for_import:
             session.add(song)
         session.commit()
 
+def do_import(importable: Importable, sessionmaker: partial[Session]) -> List[Song]:
+    with sessionmaker() as session:
+        for song in importable.get_songs():
+            song_artist = session.exec(
+                select(Artist).where(Artist.name == song.artist.name)
+            ).first()
+            if song_artist:
+                song.artist = song_artist
 
-def gather_data(importable: Importable) -> List[Song]:
-    return list(importable._songs)
+            song_album = session.exec(
+                select(Album).where(Album.name == song.album.name)
+            ).first()
+            if song_album:
+                song.album = song_album
 
 
 def gather_songs(walked_path: OsWalkResult) -> Importable:

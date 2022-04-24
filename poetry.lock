@@ -294,19 +294,6 @@ python-versions = ">=3.6"
 typing-extensions = ">=3.7.4"
 
 [[package]]
-name = "sqlmodel"
-version = "0.0.6"
-description = "SQLModel, SQL databases in Python, designed for simplicity, compatibility, and robustness."
-category = "main"
-optional = false
-python-versions = ">=3.6.1,<4.0.0"
-
-[package.dependencies]
-pydantic = ">=1.8.2,<2.0.0"
-SQLAlchemy = ">=1.4.17,<1.5.0"
-sqlalchemy2-stubs = "*"
-
-[[package]]
 name = "tomli"
 version = "2.0.1"
 description = "A lil' TOML parser"
@@ -325,7 +312,7 @@ python-versions = ">=3.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "e65197528bce4fe7381af541c8e78a360defe1de2675316b51fed6b8bc5bb79f"
+content-hash = "b9cd38ed72aa0004c807fd51b5a3b3d6b2b0e9831cce10f7ee03a4c806533d39"
 
 [metadata.files]
 alembic = [
@@ -579,10 +566,6 @@ sqlalchemy = [
 sqlalchemy2-stubs = [
     {file = "sqlalchemy2-stubs-0.0.2a22.tar.gz", hash = "sha256:31288db647bbdd411ad1e22da39a10ebe211bdcfe2efef24bcebea05abc28dd4"},
     {file = "sqlalchemy2_stubs-0.0.2a22-py3-none-any.whl", hash = "sha256:b9b907c3555d0b11bb8d738b788be478ce3871174839171d0d49aba5d0785016"},
-]
-sqlmodel = [
-    {file = "sqlmodel-0.0.6-py3-none-any.whl", hash = "sha256:c5fd8719e09da348cd32ce2a5b6a44f289d3029fa8f1c9818229b6f34f1201b4"},
-    {file = "sqlmodel-0.0.6.tar.gz", hash = "sha256:3b4f966b9671b24d85529d274e6c4dbc7753b468e35d2d6a40bd75cad1f66813"},
 ]
 tomli = [
     {file = "tomli-2.0.1-py3-none-any.whl", hash = "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc"},
