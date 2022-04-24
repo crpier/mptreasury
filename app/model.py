@@ -1,51 +1,73 @@
 import datetime
 from pathlib import Path
-from typing import Optional, List
-
-from sqlmodel import Field, SQLModel
-from sqlmodel.main import Relationship
+from typing import Optional
 
 
-class Song(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    title: str
-    genre: Optional[str] = Field(default=None, nullable=False)
-    released: Optional[datetime.datetime] = Field(default=None, nullable=False)
-    """TODO: custom type that ensures
-    - path is absolute
-    - optionally, has a prefix"""
-    path: Path
-
-    album_id: Optional[int] = Field(foreign_key="album.id", nullable=False, default=None)
-    album_name: Optional[str] = Field(index=True, nullable=False, default=None)
-    artist_id: Optional[int] = Field(foreign_key="artist.id", nullable=False, default=None)
-    artist_name: Optional[str] = Field(index=True, nullable=False, default=None)
-
-    album: "Album" = Relationship(back_populates="songs")
-    artist: "Artist" = Relationship(back_populates="songs")
+class RawSong:
+    def __init__(self, title: str, album_name: str, artist_name: Optional[str] = None):
+        self.title = title
+        self.album_name = album_name
+        self.artist_name = artist_name
 
 
-class Album(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(index=True)
-    genre: Optional[str] = Field(nullable=False, default=None)
-    released: Optional[datetime.datetime] = Field(nullable=False, default=None)
+class Song:
+    def __init__(
+        self,
+        id: int,
+        title: str,
+        # genre: str,
+        # released: datetime.datetime,
+        path: Path,
+        # album_id: int,
+        album_name: str,
+        # artist_id: int,
+        artist_name: str,
+        provider_id: Optional[int] = None,
+    ):
+        self.id = id
+        self.title = title
+        # self.genre = genre
+        # self.released = released
+        """TODO: custom type that ensures
+        - path is absolute
+        - optionally, has a prefix"""
+        self.path = path
+        # self.album_id = album_id
+        self.album_name = album_name
+        # self.artist_id = artist_id
+        self.artist_name = artist_name
+        self.provider_id = provider_id
 
-    artist_id: Optional[int] = Field(
-        nullable=False, foreign_key="artist.id", default=None
-    )
-    artist_name: Optional[str] = Field(nullable=False, index=True, default=None)
 
-    artist: "Artist" = Relationship(back_populates="albums")
-    songs: List[Song] = Relationship(back_populates="album")
+class Album:
+    def __init__(
+        self,
+        id: int,
+        name: str,
+        genre: str,
+        released: datetime.datetime,
+        artist_id: int,
+        artist_name: str,
+        master_provider_id: Optional[int] = None,
+        master_name: Optional[str] = None,
+        provider_id: Optional[int] = None,
+    ):
+        self.id = id
+        self.name = name
+        self.genre = genre
+        self.released = released
+        self.artist_id = artist_id
+        self.artist_name = artist_name
+        self.master_provider_id = master_provider_id
+        self.master_name = master_name
+        self.provider_id = provider_id
 
 
-class Artist(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(index=True)
-
-    albums: List[Album] = Relationship(back_populates="artist")
-    songs: List[Song] = Relationship(back_populates="artist")
+class Artist:
+    def __init__(self, id: int, name: str, provider_id: Optional[int] = None):
+        self.id = id
+        self.name = name
+        self.provider_id = provider_id
 
 
 UnknownArtist = Artist(id=-1, name="Unkown Artist")
