@@ -3,89 +3,61 @@ import re
 from functools import partial
 from pathlib import Path
 from typing import Iterator, List, Optional, Tuple, Dict
+from attr import validate
+from app import db, discogs_adapter
 
 
-from app.model import Album, Artist, Song, UnknownArtist
+from app.model import Album, Artist, RawAlbum, RawSong, Song, UnknownArtist
 
 SUPPORTED_MUSIC_EXTENSIONS = ["flac", "mp3", "wav"]
 
-# Damn, os.walk has quite the result. And this is the simplified version 😵
+# Damn, os.walk has quite the result. And this is a simplified version 😵
 OsWalkResult = Iterator[Tuple[str, List[str], List[str]]]
 
 
-class Importable:
-    def __init__(self):
-        self._songs: List[Song] = []
-        self._emtpy = True
+def import_songs(music_path: Path, session):
+    validate_music_path(music_path)
+    music_path = music_path.absolute()
+    walk_result: OsWalkResult = os.walk(str(music_path))
+    importable = gather_songs(walk_result)
+    raw_album = RawAlbum(importable)
+    discogs = discogs_adapter.DiscogsAdapter()
+    songs, album = discogs.populate_raw_album(raw_album)
+    if not db.album_exists(album, session):
+        db.add_album(album, session)
+        db.add_songs(songs, session)
 
-    def add_song(
-        self, title: str, path: Path, album_name: str, artist_name: Optional[str] = None
-    ):
-        if artist_name is None:
-            artist = UnknownArtist
-        else:
-            artist = Artist(name=artist_name)
 
-        album = Album(name=album_name, artist=artist)
-        song = Song(title=title, path=path, album=album, artist=artist)
-        self._songs.append(song)
-        self._emtpy = False
-
-    def is_empty(self):
-        return self._emtpy
-
-    def get_songs(self):
-        for song in self._songs:
-            yield song
-
-def import_songs(music_path: Path, sessionmaker: partial[Session]):
+def validate_music_path(music_path: Path):
     if not music_path.exists():
         raise ValueError("Path given does not exist")
     if not music_path.is_dir():
         raise ValueError("Path is not a directory")
-    music_path = music_path.absolute()
-    walk_result: OsWalkResult = os.walk(str(music_path))
-    importable = gather_songs(walk_result)
-    songs_ready_for_import = do_import(importable, sessionmaker=sessionmaker)
-    with sessionmaker() as session:
-        for song in songs_ready_for_import:
-            session.add(song)
-        session.commit()
-
-def do_import(importable: Importable, sessionmaker: partial[Session]) -> List[Song]:
-    with sessionmaker() as session:
-        for song in importable.get_songs():
-            song_artist = session.exec(
-                select(Artist).where(Artist.name == song.artist.name)
-            ).first()
-            if song_artist:
-                song.artist = song_artist
-
-            song_album = session.exec(
-                select(Album).where(Album.name == song.album.name)
-            ).first()
-            if song_album:
-                song.album = song_album
 
 
-def gather_songs(walked_path: OsWalkResult) -> Importable:
-    importable = Importable()
+def request_songs_in_album_data(songs: List[RawSong]):
+    pass
+
+
+def gather_songs(walked_path: OsWalkResult) -> List[RawSong]:
+    raw_songs: List[RawSong] = []
     for dirpath, _, filenames in walked_path:
         for filename in filenames:
             if extension(filename) in SUPPORTED_MUSIC_EXTENSIONS:
                 path_basename = os.path.basename(dirpath)
                 folder_dict = parse_folder_name(path_basename)
                 song_title = parse_song_file_name(filename)
-                importable.add_song(
+                song = RawSong(
                     title=song_title,
                     path=Path(dirpath + "/" + filename),
                     album_name=folder_dict["album"],
-                    artist_name=folder_dict.get("artist", None),
+                    artist_name=folder_dict.get("artist", UnknownArtist.name),
                 )
+                raw_songs.append(song)
 
-    if importable.is_empty():
+    if len(raw_songs) == 0:
         raise ValueError("no valid songs in path")
-    return importable
+    return raw_songs
 
 
 def parse_song_file_name(song_file_name) -> str:
