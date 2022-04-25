@@ -9,6 +9,8 @@ python = "^3.10"
 pydantic = "^1.9.0"
 alembic = "^1.7.7"
 sqlalchemy2-stubs = "^0.0.2-alpha.22"
+python3-discogs-client = "^2.3.14"
+fuzzywuzzy = "^0.18.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.1"
