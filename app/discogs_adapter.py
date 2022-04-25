@@ -66,8 +66,9 @@ class DiscogsAdapter:
                 name=album_res.title, # type: ignore
                 genre=album_res.genres[0], # type: ignore
                 released=album_res.year, # type: ignore
-                artist_id=album_res.artists.id, # type: ignore # type: ignore
-                artist_name=album_res.artists.name, # type: ignore
+                artist_id=album_res.artists[0].id, # type: ignore # type: ignore
+                artist_name=album_res.artists[0].name, # type: ignore
+                provider_id=album_res.id, # type: ignore
                 master_name=album_res.master.title, # type: ignore
                 master_provider_id=album_res.master.id, # type: ignore
             )
