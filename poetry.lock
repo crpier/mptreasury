@@ -169,6 +169,14 @@ lint = ["black", "flake8", "isort", "mypy", "check-manifest"]
 test = ["cython", "pytest", "pytest-cov"]
 
 [[package]]
+name = "mutagen"
+version = "1.45.1"
+description = "read and write audio tags for many formats"
+category = "main"
+optional = false
+python-versions = ">=3.5, <4"
+
+[[package]]
 name = "oauthlib"
 version = "3.2.0"
 description = "A generic, spec-compliant, thorough implementation of the OAuth request-signing logic"
@@ -434,7 +442,7 @@ socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "5089e2f33e5fa51e1ce00f60462d442c27818a5dbc53123a7aa22a89209c85e2"
+content-hash = "b39e0bc9ceb275541327cffce199e9e23d3facdaa21340675f43f1e69f27611d"
 
 [metadata.files]
 alembic = [
@@ -594,6 +602,10 @@ memray = [
     {file = "memray-1.0.3-cp39-cp39-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:707f40223554847c2e9c58eb2a711c5ada45a1a4309a2e11d673aa567225a583"},
     {file = "memray-1.0.3-cp39-cp39-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:d31c432c0a6697e062135e620d19f25567436375f7e5ed77698d07fced33d0b7"},
     {file = "memray-1.0.3.tar.gz", hash = "sha256:cfff403e1a25a61265547fe7ba696bd08bbbce93400444d66b4025cb4adc6e88"},
+]
+mutagen = [
+    {file = "mutagen-1.45.1-py3-none-any.whl", hash = "sha256:9c9f243fcec7f410f138cb12c21c84c64fde4195481a30c9bfb05b5f003adfed"},
+    {file = "mutagen-1.45.1.tar.gz", hash = "sha256:6397602efb3c2d7baebd2166ed85731ae1c1d475abca22090b7141ff5034b3e1"},
 ]
 oauthlib = [
     {file = "oauthlib-3.2.0-py3-none-any.whl", hash = "sha256:6db33440354787f9b7f3a6dbd4febf5d0f93758354060e802f6c06cb493022fe"},

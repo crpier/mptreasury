@@ -1,31 +1,54 @@
 import os
 import re
-from functools import partial
+import shutil
 from pathlib import Path
-from typing import Iterator, List, Optional, Tuple, Dict
-from attr import validate
+from typing import Dict, Iterator, List, Tuple
+
 from app import db, discogs_adapter
-
-
-from app.model import Album, Artist, RawAlbum, RawSong, Song, UnknownArtist
+from app.metadata_adapter import update_metadata
+from app.model import RawAlbum, RawSong, Song, UnknownArtist
 
 SUPPORTED_MUSIC_EXTENSIONS = ["flac", "mp3", "wav"]
 
-# Damn, os.walk has quite the result. And this is a simplified version 😵
+# Damn, os.walk has quite the 😵 result type. And this is a simplified version
 OsWalkResult = Iterator[Tuple[str, List[str], List[str]]]
 
 
-def import_songs(music_path: Path, session):
+def import_songs(
+    music_path: Path,
+    Session,
+    root_music_path: Path,
+    metadata_retriever: discogs_adapter.DiscogsAdapter,
+):
+    songs = import_songs_data(music_path, Session, metadata_retriever)
+    for song in songs:
+        update_metadata(song)
+        move_song(song, Session, root_music_path)
+
+
+def move_song(song: Song, Session, root_music_path: Path):
+    target_folder = Path(f"{root_music_path}/{song.artist_name}/{song.album_name}")
+    if not target_folder.exists():
+        os.makedirs(target_folder)
+    file_name = os.path.basename(song.path)
+    target_path = target_folder / file_name
+    shutil.move(song.path, target_path)
+    song.path = target_path
+    db.update_song(song, Session)
+
+
+def import_songs_data(
+    music_path: Path, session, metadata_retriever: discogs_adapter.DiscogsAdapter
+):
     validate_music_path(music_path)
     music_path = music_path.absolute()
     walk_result: OsWalkResult = os.walk(str(music_path))
     importable = gather_songs(walk_result)
     raw_album = RawAlbum(importable)
-    discogs = discogs_adapter.DiscogsAdapter()
-    songs, album = discogs.populate_raw_album(raw_album)
+    songs, album = metadata_retriever.populate_raw_album(raw_album)
     if not db.album_exists(album, session):
-        db.add_album(album, session)
-        db.add_songs(songs, session)
+        db.add_album_and_songs(album, songs, session)
+    return songs
 
 
 def validate_music_path(music_path: Path):
@@ -33,10 +56,6 @@ def validate_music_path(music_path: Path):
         raise ValueError("Path given does not exist")
     if not music_path.is_dir():
         raise ValueError("Path is not a directory")
-
-
-def request_songs_in_album_data(songs: List[RawSong]):
-    pass
 
 
 def gather_songs(walked_path: OsWalkResult) -> List[RawSong]:

@@ -1,11 +1,10 @@
 from pathlib import Path
-from sqlalchemy import create_engine, select
+from typing import Any, List
+
+from sqlalchemy import MetaData, create_engine, orm, select, types
 from sqlalchemy.orm import registry, sessionmaker
-from sqlalchemy import orm, MetaData
 from sqlalchemy.sql.schema import Column, Table
 from sqlalchemy.sql.sqltypes import Integer, String
-from sqlalchemy import types
-from typing import List, Any
 
 from app.config import config
 from app.model import Album, Song
@@ -49,7 +48,6 @@ albums_table = Table(
 mapper_registry.map_imperatively(Album, albums_table)
 mapper_registry.map_imperatively(Song, songs_table)
 engine = create_engine(config.DB_URI, echo=True)
-Session = sessionmaker(engine)
 
 
 def create_tables(engine):
@@ -65,6 +63,13 @@ def album_exists(album: Album, Session):
         return bool(existing_album)
 
 
+def add_album_and_songs(album: Album, songs: List[Song], Session):
+    with Session() as session:
+        session.add(album)
+        for song in songs:
+            session.add(song)
+
+
 def add_album(album: Album, Session):
     with Session() as session:
         session.add(album)
@@ -78,5 +83,7 @@ def add_songs(songs: List[Song], Session):
         session.commit()
 
 
-def song_exists(song: Song, Session: orm.Session):
-    return False
+def update_song(song: Song, Session):
+    with Session() as session:
+        session.add(song)
+        session.commit()

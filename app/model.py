@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional, List
+from typing import List, Optional
 
 
 class RawSong:
@@ -70,6 +70,7 @@ class Song:
     def __init__(
         self,
         title: str,
+        # track_number
         # genre: str,
         # released: datetime.datetime,
         path: Path,
@@ -77,7 +78,7 @@ class Song:
         album_name: str,
         # artist_id: int,
         artist_name: str,
-        album: Album,
+        album: Optional[Album],
         id: Optional[int] = None,
     ):
         self.id = id
@@ -85,9 +86,8 @@ class Song:
         # self.genre = genre
         # self.released = released
         """TODO: custom type that ensures
-        - path is absolute
         - optionally, has a prefix"""
-        self.path = path
+        self.path = path.absolute()
         # self.album_id = album_id
         self.album_name = album_name
         # self.artist_id = artist_id

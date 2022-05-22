@@ -1,13 +1,14 @@
 import os
-from pathlib import Path
 import shutil
-from pytest import mark, fixture
+from pathlib import Path
+
+from pytest import fixture, mark
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
+
 from app import db
 from app.model import Album, Song
-
-from app.service import import_songs
+from app.service import import_songs_data
 
 
 @fixture
@@ -39,7 +40,7 @@ def in_memory_engine():
 
 
 @fixture
-def test_session(in_memory_engine):
+def memory_session(in_memory_engine):
     Session = sessionmaker(in_memory_engine)
     return Session
 
@@ -61,10 +62,10 @@ def song_exists(song_name: str, Session):
 
 
 @mark.component
-def test_import_new_album(album_dir: Path, test_session):
-    import_songs(album_dir, test_session)
+def test_import_new_album(album_dir: Path, memory_session):
+    import_songs_data(album_dir, memory_session)
 
-    assert album_exists("Biglietto Per L'Inferno", test_session)
+    assert album_exists("Biglietto Per L'Inferno", memory_session)
     for song in [
         "Ansia",
         "Confessione",
@@ -72,4 +73,4 @@ def test_import_new_album(album_dir: Path, test_session):
         "Il Nevare",
         "L'Amico Suicida",
     ]:
-        assert song_exists(song, test_session)
+        assert song_exists(song, memory_session)

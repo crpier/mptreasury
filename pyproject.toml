@@ -12,6 +12,7 @@ sqlalchemy2-stubs = "^0.0.2-alpha.22"
 python3-discogs-client = "^2.3.14"
 fuzzywuzzy = "^0.18.0"
 python-Levenshtein = "^0.12.2"
+mutagen = "^1.45.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.1"
