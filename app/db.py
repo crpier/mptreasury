@@ -5,6 +5,7 @@ from sqlalchemy import MetaData, create_engine, orm, select, types
 from sqlalchemy.orm import registry, sessionmaker
 from sqlalchemy.sql.schema import Column, Table
 from sqlalchemy.sql.sqltypes import Integer, String
+from app.config import Config
 
 from app.config import config
 from app.model import Album, Song
@@ -47,12 +48,22 @@ albums_table = Table(
 
 mapper_registry.map_imperatively(Album, albums_table)
 mapper_registry.map_imperatively(Song, songs_table)
-engine = create_engine(config.DB_URI, echo=True)
+master_engine = None
 
 
-def create_tables(engine):
-    mapper_registry.metadata.create_all(engine)
-    MetaData().create_all(engine)
+def get_sessionmaker(settings: Config):
+    global master_engine
+    master_engine = create_engine(settings.DB_URI, echo=True)
+    maker = sessionmaker(master_engine, expire_on_commit=False)
+    return maker
+
+
+def create_tables():
+    global master_engine
+    if master_engine is None:
+        raise ValueError("There was no engine initialized")
+    mapper_registry.metadata.create_all(master_engine)
+    MetaData().create_all(master_engine)
 
 
 def album_exists(album: Album, Session):

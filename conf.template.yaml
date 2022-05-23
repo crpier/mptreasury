@@ -1,0 +1,4 @@
+---
+LIBRARY_DIR: /some/dir
+DB_DIR: /some/other/dir
+DISCOGS_PAT: 123notanactualpath
