@@ -68,3 +68,6 @@ def test_import_e2e(basic_song_list: List[Song], memory_session, src_and_dest_fo
     assert sorted(song_file_names) == sorted(
         file_names
     ), "Input song list was changed when importing songs"
+
+# TODO: test unimported files are not removed
+# TODO: these tests aren't really e2e, they're more like component tests. Update that.

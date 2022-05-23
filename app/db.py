@@ -7,7 +7,6 @@ from sqlalchemy.sql.schema import Column, Table
 from sqlalchemy.sql.sqltypes import Integer, String
 from app.config import Config
 
-from app.config import config
 from app.model import Album, Song
 
 
@@ -79,6 +78,8 @@ def add_album_and_songs(album: Album, songs: List[Song], Session):
         session.add(album)
         for song in songs:
             session.add(song)
+        session.commit()
+        session.flush()
 
 
 def add_album(album: Album, Session):

@@ -58,6 +58,8 @@ def run_migrations_online():
 
     """
     db_config = config.get_section(config.config_ini_section)
+    if not db_config:
+        exit(1)
     db_config["sqlalchemy.url"] = app_config.config.DB_URI
     connectable = engine_from_config(
         db_config,
