@@ -67,6 +67,8 @@ class Artist:
 
 
 class Song:
+    title: str
+    album_name: str
     def __init__(
         self,
         title: str,

@@ -3,6 +3,7 @@ from typing import Any, List
 
 from sqlalchemy import MetaData, create_engine, orm, select, types
 from sqlalchemy.orm import registry, sessionmaker
+from sqlalchemy.sql.operators import contains_op
 from sqlalchemy.sql.schema import Column, Table
 from sqlalchemy.sql.sqltypes import Integer, String
 from app.config import Config
@@ -101,3 +102,23 @@ def update_song(song: Song, Session):
     with Session() as session:
         session.add(song)
         session.commit()
+
+
+def get_songs(title: str, Session):
+    with Session() as session:
+        songs = session.execute(
+            select(Song.title, Song.album_name).filter(
+                Song.title.contains(title)  # type: ignore
+            )
+        ).all()
+        return songs
+
+
+def get_songs_by_album(album_name: str, Session):
+    with Session() as session:
+        songs = session.execute(
+            select(Song.title, Song.album_name).filter(
+                Song.album_name.contains(album_name)  # type: ignore
+            )
+        ).all()
+        return songs

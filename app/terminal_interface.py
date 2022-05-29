@@ -4,8 +4,8 @@ import click
 import discogs_client
 
 from app import db
-import app.model
-import app.import_service
+from app import import_service
+from app import query_service
 from app import discogs_adapter
 from app import bootstrap
 
@@ -33,19 +33,20 @@ def import_dir(music_dir: str):
 @click.command()
 @click.option("--query", help="Text query to issue")
 def query_songs(query: str):
-    pass
+    if query == "":
+        click.Abort("Query cannot be empty!")
+    if query.encode("ascii"):
+        click.Abort("UTF8 queries not implemented 😔")
+    songs = query_service.query_songs(query, session)
+    for song in songs:
+        click.echo(f"{song.title} - {song.album_name}")
 
 
 def import_action(import_path: Path):
-    settings = bootstrap.bootstrap()
-    dest_path = settings.LIBRARY_DIR
-    session = db.get_sessionmaker(settings)
-    db.create_tables()
-
     client = discogs_client.Client("mptreasury/0.1", user_token=settings.DISCOGS_PAT)
     metadata_retriever = discogs_adapter.DiscogsAdapter(client)
 
-    app.import_service.import_songs(
+    import_service.import_songs(
         music_path=import_path,
         Session=session,
         root_music_path=dest_path,
@@ -56,4 +57,9 @@ def import_action(import_path: Path):
 if __name__ == "__main__":
     main.add_command(import_dir)
     main.add_command(query_songs)
+    settings = bootstrap.bootstrap()
+    dest_path = settings.LIBRARY_DIR
+    session = db.get_sessionmaker(settings)
+    db.create_tables()
+
     main()
