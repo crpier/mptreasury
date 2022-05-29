@@ -32,14 +32,27 @@ def import_dir(music_dir: str):
 
 @click.command()
 @click.option("--query", help="Text query to issue")
-def query_songs(query: str):
+@click.option(
+    "--fields",
+    default="",
+    help="List of fields to show. Example with all available: "
+    "'title,path,album_name,artist_name,id'",
+)
+def query_songs(query: str, fields: str):
     if query == "":
         click.Abort("Query cannot be empty!")
     if query.encode("ascii"):
         click.Abort("UTF8 queries not implemented 😔")
+    properties_to_show = fields.split(",")
     songs = query_service.query_songs(query, session)
     for song in songs:
-        click.echo(f"{song.title} - {song.album_name}")
+        if not fields:
+            click.echo(f"{song.title} - {song.album_name}")
+        else:
+            representation = {
+                property: song.__dict__[property] for property in properties_to_show
+            }
+            click.echo(representation)
 
 
 def import_action(import_path: Path):

@@ -115,7 +115,7 @@ def update_song_path(song: Song, Session):
 def get_songs(title: str, Session):
     with Session() as session:
         songs = session.execute(
-            select(Song.title, Song.album_name).filter(
+            select(Song).filter(
                 Song.title.contains(title)  # type: ignore
             )
         ).all()
@@ -125,7 +125,7 @@ def get_songs(title: str, Session):
 def get_songs_by_album(album_name: str, Session):
     with Session() as session:
         songs = session.execute(
-            select(Song.title, Song.album_name).filter(
+            select(Song).filter(
                 Song.album_name.contains(album_name)  # type: ignore
             )
         ).all()
