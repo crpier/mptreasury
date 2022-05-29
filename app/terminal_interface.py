@@ -5,25 +5,35 @@ import discogs_client
 
 from app import db
 import app.model
-import app.service
+import app.import_service
 from app import discogs_adapter
 from app import bootstrap
 
 
+@click.group()
+def main():
+    pass
+
+
 @click.command()
-@click.option("--import_music_dir", default=None, help="Add new music to the library")
-@click.option("--songs_query", default=None, help="Search for a song in the library")
-def main(import_music_dir: str, songs_query: str):
-    if import_music_dir is not None:
-        music_path = Path(import_music_dir)
+@click.option("--music_dir", help="Add new music to the library")
+def import_dir(music_dir: str):
+    if music_dir is not None:
+        music_path = Path(music_dir)
         if not music_path.exists():
-            click.echo(f"Given target {import_music_dir} does not exist!")
+            click.echo(f"Given target {music_dir} does not exist!")
             click.Abort()
         if not music_path.is_dir():
-            click.echo(f"Given target {import_music_dir} is not a folder!")
+            click.echo(f"Given target {music_dir} is not a folder!")
             click.Abort()
         music_path = music_path.absolute()
         import_action(import_path=music_path)
+
+
+@click.command()
+@click.option("--query", help="Text query to issue")
+def query_songs(query: str):
+    pass
 
 
 def import_action(import_path: Path):
@@ -35,7 +45,7 @@ def import_action(import_path: Path):
     client = discogs_client.Client("mptreasury/0.1", user_token=settings.DISCOGS_PAT)
     metadata_retriever = discogs_adapter.DiscogsAdapter(client)
 
-    app.service.import_songs(
+    app.import_service.import_songs(
         music_path=import_path,
         Session=session,
         root_music_path=dest_path,
@@ -44,4 +54,6 @@ def import_action(import_path: Path):
 
 
 if __name__ == "__main__":
+    main.add_command(import_dir)
+    main.add_command(query_songs)
     main()

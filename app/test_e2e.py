@@ -7,7 +7,7 @@ from typing import List
 import pytest
 from mutagen.easyid3 import EasyID3
 
-from app import discogs_adapter, service, test_utils
+from app import discogs_adapter, import_service, test_utils
 from app.conftest import memory_session
 from app.model import Song
 from app import test_utils
@@ -48,7 +48,7 @@ def test_import_e2e(basic_song_list: List[Song], memory_session, src_and_dest_fo
     file_names = [os.path.basename(song.path) for song in basic_song_list]
     fake_client = discogs_adapter.FakeDiscogsClient(tracklist)
     fake_metadata_retriever = discogs_adapter.DiscogsAdapter(fake_client)
-    service.import_songs(
+    import_service.import_songs(
         music_path=music_path,
         root_music_path=dest_folder,
         Session=memory_session,
@@ -78,7 +78,7 @@ def test_import_persists_songs_and_album(
     tracklist = [song.title for song in basic_song_list]
     fake_client = discogs_adapter.FakeDiscogsClient(tracklist)
     fake_metadata_retriever = discogs_adapter.DiscogsAdapter(fake_client)
-    service.import_songs(
+    import_service.import_songs(
         music_path=music_path,
         root_music_path=dest_folder,
         Session=memory_session,
