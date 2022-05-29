@@ -1,9 +1,9 @@
 from pathlib import Path
 from typing import Any, List
 
-from sqlalchemy import MetaData, create_engine, orm, select, types
+from sqlalchemy import MetaData, create_engine, select, types, and_
 from sqlalchemy.orm import registry, sessionmaker
-from sqlalchemy.sql.operators import contains_op
+from sqlalchemy.sql.elements import and_
 from sqlalchemy.sql.schema import Column, Table
 from sqlalchemy.sql.sqltypes import Integer, String
 from app.config import Config
@@ -98,9 +98,15 @@ def add_songs(songs: List[Song], Session):
         session.commit()
 
 
-def update_song(song: Song, Session):
+def update_song_path(song: Song, Session):
     with Session() as session:
-        session.add(song)
+        # I feel like I'm doing a hack here 🤔
+        updated_song = session.execute(
+            select(Song).filter(
+                and_(Song.title == song.title, Song.album_name == song.album_name)  # type: ignore
+            )
+        ).one()[0]
+        updated_song.path = song
         session.commit()
 
 

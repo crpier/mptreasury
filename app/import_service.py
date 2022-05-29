@@ -43,7 +43,7 @@ def move_song(song: Song, Session, root_music_path: Path):
     target_path = target_folder / file_name
     shutil.move(song.path, target_path)
     song.path = target_path
-    db.update_song(song, Session)
+    db.update_song_path(song, Session)
 
 
 def get_raw_album(music_path: Path):
