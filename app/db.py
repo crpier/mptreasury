@@ -56,6 +56,8 @@ def get_sessionmaker(settings: Config):
     # Not happy we init the engine here, but can't see a better way
     if not master_engine:
         master_engine = create_engine(settings.DB_URI, echo=True)
+    # TODO: I should remove the expire_on_commit arg and create function
+    # that converts an sqlalchemy object instance to a model instance
     maker = sessionmaker(master_engine, expire_on_commit=False)
     return maker
 
