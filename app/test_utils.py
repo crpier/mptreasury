@@ -2,6 +2,8 @@ import os
 import subprocess
 from pathlib import Path
 
+from app.model import Album, Song
+from sqlalchemy import select
 from app import metadata_adapter
 from app.model import Song
 
@@ -29,3 +31,19 @@ def make_test_mp3(title="test_title", file_name_without_extension="0 - test song
 
 def clean_test_mp3(song: Song):
     os.remove(song.path)
+
+
+def album_exists(album_name: str, Session):
+    with Session(future=True) as session:
+        existing_album = session.execute(
+            select(Album).filter_by(name=album_name)
+        ).first()
+        return bool(existing_album)
+
+
+def song_exists(song_name: str, Session):
+    with Session(future=True) as session:
+        existing_album = session.execute(
+            select(Song).filter_by(title=song_name)
+        ).first()
+        return bool(existing_album)

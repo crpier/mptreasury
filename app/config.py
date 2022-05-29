@@ -19,7 +19,7 @@ class Config(BaseSettings):
     # TODO: figure out why pydantic breaks when I use an enum with default value
     # APP_ENV: APP_ENV = APP_ENV.production
     APP_ENV: str = "prod"
-    DB_URI: str
+    DB_URI: Optional[str] = None
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)

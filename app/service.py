@@ -20,10 +20,19 @@ def import_songs(
     root_music_path: Path,
     metadata_retriever: discogs_adapter.DiscogsAdapter,
 ):
-    songs = import_songs_data(music_path, Session, metadata_retriever)
+    raw_album = get_raw_album(music_path)
+    songs, album = metadata_retriever.populate_raw_album(raw_album)
+    if not db.album_exists(album, Session):
+        db.add_album_and_songs(album, songs, Session)
+    updated_songs = correct_metadata(songs, Session, root_music_path)
+    return updated_songs
+
+
+def correct_metadata(songs: List[Song], Session, destination_path: Path):
     for song in songs:
         update_metadata(song)
-        move_song(song, Session, root_music_path)
+        move_song(song, Session, destination_path)
+    return songs
 
 
 def move_song(song: Song, Session, root_music_path: Path):
@@ -37,25 +46,16 @@ def move_song(song: Song, Session, root_music_path: Path):
     db.update_song(song, Session)
 
 
-def import_songs_data(
-    music_path: Path, session, metadata_retriever: discogs_adapter.DiscogsAdapter
-):
-    validate_music_path(music_path)
+def get_raw_album(music_path: Path):
     music_path = music_path.absolute()
     walk_result: OsWalkResult = os.walk(str(music_path))
     importable = gather_songs(walk_result)
-    raw_album = RawAlbum(importable)
-    songs, album = metadata_retriever.populate_raw_album(raw_album)
-    if not db.album_exists(album, session):
-        db.add_album_and_songs(album, songs, session)
-    return songs
+    return RawAlbum(importable)
 
 
 def validate_music_path(music_path: Path):
-    if not music_path.exists():
-        raise ValueError("Path given does not exist")
-    if not music_path.is_dir():
-        raise ValueError("Path is not a directory")
+    assert music_path.exists()
+    assert music_path.is_dir()
 
 
 def gather_songs(walked_path: OsWalkResult) -> List[RawSong]:

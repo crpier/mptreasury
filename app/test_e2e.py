@@ -10,6 +10,7 @@ from mutagen.easyid3 import EasyID3
 from app import discogs_adapter, service, test_utils
 from app.conftest import memory_session
 from app.model import Song
+from app import test_utils
 
 
 @pytest.fixture
@@ -68,6 +69,26 @@ def test_import_e2e(basic_song_list: List[Song], memory_session, src_and_dest_fo
     assert sorted(song_file_names) == sorted(
         file_names
     ), "Input song list was changed when importing songs"
+
+
+def test_import_persists_songs_and_album(
+    basic_song_list: List[Song], memory_session, src_and_dest_folders
+):
+    music_path, dest_folder = src_and_dest_folders
+    tracklist = [song.title for song in basic_song_list]
+    fake_client = discogs_adapter.FakeDiscogsClient(tracklist)
+    fake_metadata_retriever = discogs_adapter.DiscogsAdapter(fake_client)
+    service.import_songs(
+        music_path=music_path,
+        root_music_path=dest_folder,
+        Session=memory_session,
+        metadata_retriever=fake_metadata_retriever,
+    )
+
+    assert test_utils.album_exists("test album", memory_session)
+    for song in tracklist:
+        assert test_utils.song_exists(song, memory_session)
+
 
 # TODO: test unimported files are not removed
 # TODO: these tests aren't really e2e, they're more like component tests. Update that.

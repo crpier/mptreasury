@@ -52,7 +52,9 @@ master_engine = None
 
 def get_sessionmaker(settings: Config):
     global master_engine
-    master_engine = create_engine(settings.DB_URI, echo=True)
+    # Not happy we init the engine here, but can't see a better way
+    if not master_engine:
+        master_engine = create_engine(settings.DB_URI, echo=True)
     maker = sessionmaker(master_engine, expire_on_commit=False)
     return maker
 

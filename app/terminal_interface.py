@@ -11,19 +11,24 @@ from app import bootstrap
 
 
 @click.command()
-@click.argument("target_dir")
-def main(target_dir: str):
+@click.option("--import_music_dir", default=None, help="Add new music to the library")
+@click.option("--songs_query", default=None, help="Search for a song in the library")
+def main(import_music_dir: str, songs_query: str):
+    if import_music_dir is not None:
+        music_path = Path(import_music_dir)
+        if not music_path.exists():
+            click.echo(f"Given target {import_music_dir} does not exist!")
+            click.Abort()
+        if not music_path.is_dir():
+            click.echo(f"Given target {import_music_dir} is not a folder!")
+            click.Abort()
+        music_path = music_path.absolute()
+        import_action(import_path=music_path)
+
+
+def import_action(import_path: Path):
     settings = bootstrap.bootstrap()
-    click.echo(settings)
     dest_path = settings.LIBRARY_DIR
-    music_path = Path(target_dir)
-    if not music_path.exists():
-        click.echo(f"Given target {target_dir} does not exist!")
-        click.Abort()
-    if not music_path.is_dir():
-        click.echo(f"Given target {target_dir} is not a folder!")
-        click.Abort()
-    music_path = music_path.absolute()
     session = db.get_sessionmaker(settings)
     db.create_tables()
 
@@ -31,7 +36,7 @@ def main(target_dir: str):
     metadata_retriever = discogs_adapter.DiscogsAdapter(client)
 
     app.service.import_songs(
-        music_path=music_path,
+        music_path=import_path,
         Session=session,
         root_music_path=dest_path,
         metadata_retriever=metadata_retriever,

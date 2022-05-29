@@ -14,7 +14,8 @@ def bootstrap(env="prod"):
         with conf_path.open() as f:
             data = list(yaml.load_all(f, Loader=SafeLoader))[0]
             conf = config.Config(**data)
+    elif env == "e2e_test":
+        conf = config.Config(LIBRARY_DIR="lol", DISCOGS_PAT="", APP_ENV="e2e_test")
     else:
         conf = config.Config()  # type: ignore
     return conf
-
