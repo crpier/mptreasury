@@ -46,11 +46,12 @@ def query_songs(query: str, fields: str):
     properties_to_show = fields.split(",")
     songs = query_service.query_songs(query, session)
     for song in songs:
+        song = song.printable_dict()
         if not fields:
-            click.echo(f"{song.title} - {song.album_name}")
+            click.echo(f"{song['title']} - {song['album_name']}")
         else:
             representation = {
-                property: song.__dict__[property] for property in properties_to_show
+                property: song[property] for property in properties_to_show
             }
             click.echo(representation)
 

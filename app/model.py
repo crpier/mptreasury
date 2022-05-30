@@ -97,5 +97,13 @@ class Song:
         self.artist_name = artist_name
         self.album = album
 
+    def printable_dict(self):
+        return dict(
+                id= self.id,
+                title= self.title,
+                album_name= self.album_name,
+                artist_name= self.artist_name,
+                path= str(self.path),
+                )
 
 UnknownArtist = Artist(id=-1, name="Unkown Artist")
