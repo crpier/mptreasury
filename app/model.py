@@ -69,6 +69,7 @@ class Artist:
 class Song:
     title: str
     album_name: str
+
     def __init__(
         self,
         title: str,
@@ -80,7 +81,7 @@ class Song:
         album_name: str,
         # artist_id: int,
         artist_name: str,
-        album: Optional[Album],
+        album: Optional[Album] = None,
         id: Optional[int] = None,
     ):
         self.id = id

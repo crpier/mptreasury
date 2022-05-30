@@ -15,7 +15,7 @@ class Config(BaseSettings):
     #TODO: validate paths
     LIBRARY_DIR: Path
     DISCOGS_PAT: str
-    DB_DIR: Path = Path("")
+    DB_FILE: Optional[Path]
     # TODO: figure out why pydantic breaks when I use an enum with default value
     # APP_ENV: APP_ENV = APP_ENV.production
     APP_ENV: str = "prod"
@@ -23,5 +23,8 @@ class Config(BaseSettings):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        db_file = self.DB_DIR.absolute() / "library.db"
+        if self.DB_FILE:
+            db_file = self.DB_FILE.absolute()
+        else:
+            db_file = ""
         self.DB_URI = f"sqlite:///{db_file}"

@@ -108,7 +108,7 @@ def update_song_path(song: Song, Session):
                 and_(Song.title == song.title, Song.album_name == song.album_name)  # type: ignore
             )
         ).one()[0]
-        updated_song.path = song
+        updated_song.path = song.path
         session.commit()
 
 
