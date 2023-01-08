@@ -55,7 +55,8 @@ def get_sessionmaker(settings: Config):
     global master_engine
     # Not happy we init the engine here, but can't see a better way
     if not master_engine:
-        master_engine = create_engine(settings.DB_URI, echo=True)
+        # TODO: config option for echo
+        master_engine = create_engine(settings.DB_URI, echo=False)
     # TODO: I should remove the expire_on_commit arg and create function
     # that converts an sqlalchemy object instance to a model instance
     maker = sessionmaker(master_engine, expire_on_commit=False)
@@ -70,12 +71,15 @@ def create_tables():
     MetaData().create_all(master_engine)
 
 
-def album_exists(album: Album, Session):
+def get_album_id(album: Album, Session) -> int | None:
     with Session(future=True) as session:
         existing_album = session.execute(
             select(Album).filter_by(master_provider_id=album.master_provider_id)
         ).first()
-        return bool(existing_album)
+        if existing_album:
+            return existing_album[0]
+        else:
+            return None
 
 
 def add_album_and_songs(album: Album, songs: List[Song], Session):

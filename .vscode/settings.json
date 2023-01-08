@@ -1,0 +1,18 @@
+{
+    "python.formatting.provider": "black",
+    "cSpell.words": [
+        "Alphataurus",
+        "Anglagard",
+        "deflacue",
+        "Locanda",
+        "mptreasury",
+        "Quella",
+        "tracklist",
+        "Vecchia"
+    ],
+    "python.testing.pytestArgs": [
+        "app"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
+}

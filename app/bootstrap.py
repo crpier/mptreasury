@@ -4,7 +4,20 @@ from app import config
 import yaml
 from yaml.loader import SafeLoader
 
+import sys
+import logging
 
+logger = logging.getLogger("mptreasury")
+logger.setLevel(logging.DEBUG)
+
+# TODO: set logging level in bootstrap()
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
+# TODO: set db in bootstrap
 def bootstrap(env="prod"):
     if env == "prod":
         conf_path = Path(os.path.expanduser("~/.config/mptreasury/conf.yaml"))

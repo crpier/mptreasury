@@ -1,7 +1,7 @@
 from pathlib import Path
 import click
 
-import discogs_client
+import discogs_client # type: ignore
 
 from app import db
 from app import import_service
@@ -20,6 +20,7 @@ def main():
 def import_dir(music_dir: str):
     if music_dir is not None:
         music_path = Path(music_dir)
+        # TODO: move these validations at service level
         if not music_path.exists():
             click.echo(f"Given target {music_dir} does not exist!")
             click.Abort()
@@ -58,13 +59,14 @@ def query_songs(query: str, fields: str):
 
 def import_action(import_path: Path):
     client = discogs_client.Client("mptreasury/0.1", user_token=settings.DISCOGS_PAT)
-    metadata_retriever = discogs_adapter.DiscogsAdapter(client)
+    discogs_searcher = discogs_adapter.discogsLookupFactory(client)
 
-    import_service.import_songs(
+    import_service.import_folder(
         music_path=import_path,
         Session=session,
         root_music_path=dest_path,
-        metadata_retriever=metadata_retriever,
+        searcher=discogs_searcher,
+        config=settings
     )
 
 

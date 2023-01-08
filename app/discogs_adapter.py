@@ -1,4 +1,5 @@
-from typing import List, Tuple
+from typing import List, Protocol, Tuple
+import discogs_client
 
 import discogs_client.models as discogs_models
 from fuzzywuzzy import fuzz
@@ -111,7 +112,7 @@ class DiscogsAdapter:
                 continue
             new_songs: List[Song] = []
             new_album = Album(
-                name=album_res.title,  # type: ignore
+                name=album_res.title,
                 genre=album_res.genres[0],  # type: ignore
                 released=album_res.year,  # type: ignore
                 artist_id=album_res.artists[0].id,  # type: ignore # type: ignore
@@ -135,3 +136,26 @@ class DiscogsAdapter:
 
             return new_songs, new_album
         raise ValueError("could not populate album")
+
+
+class Searcher(Protocol):
+    def __init__(self, album_name: str, artist_name: str | None = None):
+        raise NotImplementedError()
+
+    def next_page(self) -> list[discogs_models.Release]:
+        raise NotImplementedError()
+
+
+def discogsLookupFactory(client: discogs_client.Client) -> type[Searcher]:
+    class DiscogsAlbumLookup:
+        def __init__(self, album_name: str, artist_name: str | None = None) -> None:
+            self._paginated_results = client.search(
+                album_name, type="release", artist_name=artist_name
+            )
+            self._last_page_fetched = 0
+
+        def next_page(self) -> list[discogs_models.Release]:
+            self._last_page_fetched += 1
+            return self._paginated_results.page(self._last_page_fetched)
+
+    return DiscogsAlbumLookup
