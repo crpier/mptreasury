@@ -34,6 +34,7 @@ def basic_song_list():
 @pytest.fixture
 def src_and_dest_folders():
     music_path = Path("testdata")
+    music_path.mkdir()
     dest_folder = music_path / "dest"
     os.makedirs(dest_folder)
     yield music_path, dest_folder
@@ -48,8 +49,8 @@ def test_import_e2e(basic_song_list: List[Song], memory_session, src_and_dest_fo
     file_names = [os.path.basename(song.path) for song in basic_song_list]
     fake_client = discogs_adapter.FakeDiscogsClient(tracklist)
     fake_metadata_retriever = discogs_adapter.DiscogsAdapter(fake_client)
-    import_service.import_songs(
-        music_path=music_path,
+    import_service.import_folder(
+        folder_path=music_path,
         root_music_path=dest_folder,
         Session=memory_session,
         metadata_retriever=fake_metadata_retriever,
@@ -79,8 +80,8 @@ def test_import_persists_songs_and_album(
     tracklist = [song.title for song in basic_song_list]
     fake_client = discogs_adapter.FakeDiscogsClient(tracklist)
     fake_metadata_retriever = discogs_adapter.DiscogsAdapter(fake_client)
-    import_service.import_songs(
-        music_path=music_path,
+    import_service.import_folder(
+        folder_path=music_path,
         root_music_path=dest_folder,
         Session=memory_session,
         metadata_retriever=fake_metadata_retriever,

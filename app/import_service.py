@@ -1,114 +1,189 @@
+from enum import StrEnum
 import os
-import re
 import shutil
 from pathlib import Path
-from typing import Dict, Iterator, List, Tuple
+import unicodedata
+import typing
 
 from app import db, discogs_adapter
-from app.metadata_adapter import update_metadata
-from app.model import RawAlbum, RawSong, Song, UnknownArtist
-
-SUPPORTED_MUSIC_EXTENSIONS = ["flac", "mp3", "wav"]
-
-# Damn, os.walk has quite the 😵 result type. And this is a simplified version
-OsWalkResult = Iterator[Tuple[str, List[str], List[str]]]
+from app.model import CueParser, RawAlbum, Album, Song
+from app import constants
+from app import config
 
 
-def import_songs(
+from fuzzywuzzy import fuzz  # type: ignore
+from discogs_client import models as discogs_models
+
+import logging
+
+logger = logging.getLogger("mptreasury")
+
+
+class FolderType(StrEnum):
+    album_folder = "album_folder"
+    artist_folder = "artist_folder"
+
+
+def determine_folder_type(path: Path) -> FolderType:
+    subdirs = 0
+    music_files = 0
+    has_cue = False
+    for result in os.listdir(path):
+        item = Path(result)
+        if item.suffix == ".cue":
+            has_cue = True
+        if item.is_dir():
+            subdirs += 1
+        else:
+            if item.suffix in constants.ALL_MUSIC_EXTENSIONS:
+                music_files += 1
+    if has_cue and music_files == 1:
+        return FolderType.album_folder
+    elif music_files > subdirs:
+        return FolderType.album_folder
+    else:
+        return FolderType.artist_folder
+
+
+def copy_songs_to_music_folder(songs: list[Song], library_folder: Path):
+    for song in songs:
+        target_folder_name = os.path.join(
+            library_folder, song.artist_name, song.album_name
+        )
+        normalized_target_folder_name = (
+            unicodedata.normalize("NFKD", target_folder_name)
+            .encode("ascii", "ignore")
+            .decode()
+        )
+        target_folder_path = Path(normalized_target_folder_name)
+        normalized_song_file_name = (
+            unicodedata.normalize("NFKD", f"{song.title}{song.path.suffix}")
+            .encode("ascii", "ignore")
+            .decode()
+        )
+
+        if not target_folder_path.exists():
+            os.makedirs(target_folder_path)
+        target_path = target_folder_path / normalized_song_file_name
+        shutil.copy(song.path, target_path)
+        song.path = target_path
+
+
+# TODO: this is quite the convoluted piece of logic. do some renames and add a dataclass for these triplets maybe?
+def fuzzy_match_tracks(actual_tracks: list[str], potential_matches: list[str]):
+    # Triplets of actual track, potential match, matching score
+    # Could this be dog 🤔
+    triplets: list[tuple[str, str, int]] = []
+    for potential_match in potential_matches:
+        if len(actual_tracks) == 0:
+            break
+        scores = [
+            fuzz.partial_ratio(potential_match, actual_track)
+            for actual_track in actual_tracks
+        ]
+        index_max = max(range(len(scores)), key=scores.__getitem__)
+        triplets.append((actual_tracks[index_max], potential_match, scores[index_max]))
+        del actual_tracks[index_max]
+    score = score_fuzzy_match_triplet(
+        triplets, len(actual_tracks), len(potential_matches)
+    )
+    return triplets, score
+
+
+def score_fuzzy_match_triplet(
+    triplets: list[tuple[str, str, int]],
+    no_of_actual_tracks: int,
+    no_of_potential_tracks: int,
+):
+    score_sum = sum([triplet[2] for triplet in triplets])
+    score_mean = score_sum / len(triplets)
+    score_mean = score_mean * (1 - 0.2 * no_of_actual_tracks)
+    potential_tracks_diff = no_of_potential_tracks - len(triplets)
+    score_mean = score_mean * (1 - 0.2 * potential_tracks_diff)
+    return score_mean
+
+
+def load_discogs_album_into_raw_album(
+    album_res: discogs_models.Release,
+    raw_album: RawAlbum,
+    match_triplets: typing.Any,
+    root_music_path: Path,
+    session,
+):
+    new_songs: list[Song] = []
+    new_album = Album(
+        name=str(album_res.title),
+        genre=album_res.genres[0],  # type: ignore
+        released=album_res.year,  # type: ignore
+        artist_id=album_res.artists[0].id,  # type: ignore # type: ignore
+        artist_name=album_res.artists[0].name,  # type: ignore
+        provider_id=album_res.id,  # type: ignore
+        master_name=album_res.master.title,  # type: ignore
+        master_provider_id=album_res.master.id,  # type: ignore
+    )
+    logger.info("Loading songs from %s", raw_album.songs[0].path.parent)
+    for actual_track, potential_track, _ in match_triplets:
+        raw_song = raw_album.song_by_title(actual_track)
+        if not raw_song:
+            raise ValueError("weird, a song from the raw album disappeared")
+        new_song = Song(
+            title=potential_track,
+            path=raw_song.path,
+            album_name=album_res.title,  # type: ignore
+            artist_name=album_res.artists[0].name,  # type: ignore
+            album=new_album,
+        )
+        new_songs.append(new_song)
+    if not (id := db.get_album_id(new_album, session)):
+        logger.info("Adding songs for %s to library", new_album.name)
+        copy_songs_to_music_folder(new_songs, root_music_path)
+        db.add_album_and_songs(new_album, new_songs, session)
+    else:
+        logger.info("Album %s already in db with id: %s", new_album.name, id)
+
+
+def import_folder(
     music_path: Path,
     Session,
     root_music_path: Path,
-    metadata_retriever: discogs_adapter.DiscogsAdapter,
+    searcher: type[discogs_adapter.Searcher],
+    config: config.Config,
 ):
-    raw_album = get_raw_album(music_path)
-    songs, album = metadata_retriever.populate_raw_album(raw_album)
-    if not db.album_exists(album, Session):
-        db.add_album_and_songs(album, songs, Session)
-    updated_songs = correct_metadata(songs, Session, root_music_path)
-    return updated_songs
+    logger.info("Gonna look up in %s", music_path)
+    folder_type = determine_folder_type(music_path)
+    match folder_type:
+        case FolderType.album_folder:
+            raw_albums = [RawAlbum(music_path, cue_parser=CueParser(config))]
+        case FolderType.artist_folder:
+            raw_albums = []
+            for res in os.listdir(music_path):
+                album_path = music_path / res
+                raw_albums.append(RawAlbum(album_path, cue_parser=CueParser(config)))
 
-
-def correct_metadata(songs: List[Song], Session, destination_path: Path):
-    for song in songs:
-        update_metadata(song)
-        move_song(song, Session, destination_path)
-    return songs
-
-
-def move_song(song: Song, Session, root_music_path: Path):
-    target_folder = Path(f"{root_music_path}/{song.artist_name}/{song.album_name}")
-    if not target_folder.exists():
-        os.makedirs(target_folder)
-    file_name = os.path.basename(song.path)
-    target_path = target_folder / file_name
-    shutil.move(song.path, target_path)
-    song.path = target_path
-    db.update_song_path(song, Session)
-
-
-def get_raw_album(music_path: Path):
-    music_path = music_path.absolute()
-    walk_result: OsWalkResult = os.walk(str(music_path))
-    importable = gather_songs(walk_result)
-    return RawAlbum(importable)
-
-
-def validate_music_path(music_path: Path):
-    assert music_path.exists()
-    assert music_path.is_dir()
-
-
-def gather_songs(walked_path: OsWalkResult) -> List[RawSong]:
-    raw_songs: List[RawSong] = []
-    for dirpath, _, filenames in walked_path:
-        for filename in filenames:
-            if extension(filename) in SUPPORTED_MUSIC_EXTENSIONS:
-                path_basename = os.path.basename(dirpath)
-                folder_dict = parse_folder_name(path_basename)
-                song_title = parse_song_file_name(filename)
-                song = RawSong(
-                    title=song_title,
-                    path=Path(dirpath + "/" + filename),
-                    album_name=folder_dict["album"],
-                    artist_name=folder_dict.get("artist", UnknownArtist.name),
+    for raw_album in raw_albums:
+        logger.info(
+            "Trying to import %s by %s from %s",
+            raw_album.name,
+            raw_album.artist_name,
+            raw_album.music_path,
+        )
+        search = searcher(
+            album_name=raw_album.name,
+            artist_name=raw_album.artist_name,
+        )
+        candidates = search.next_page()
+        for i, album_res in zip(range(constants.MAX_GUESS_ATTEMPTS), candidates):
+            discogs_tracks = [track.title for track in album_res.tracklist if track.fetch("type_") == "track"]  # type: ignore
+            match_triplets, overall_score = fuzzy_match_tracks(
+                [track.title for track in raw_album.songs], discogs_tracks
+            )
+            logger.info("Candidate %s: %s by %s - %s with score %s", i, album_res.title, album_res.artists[0].name, album_res.id, overall_score)  # type: ignore
+            if overall_score >= constants.MINIMUM_MATCHING_ALBUM_SCORE:
+                load_discogs_album_into_raw_album(
+                    album_res=album_res,
+                    raw_album=raw_album,
+                    match_triplets=match_triplets,
+                    root_music_path=root_music_path,
+                    session=Session,
                 )
-                raw_songs.append(song)
-
-    if len(raw_songs) == 0:
-        raise ValueError("no valid songs in path")
-    return raw_songs
-
-
-def parse_song_file_name(song_file_name) -> str:
-    # Order matters, only the first match is used
-    validator_regexes = [r"^[0-9 -]+(.+)\..+$"]
-    for validator in validator_regexes:
-        match = re.search(validator, song_file_name)
-        if match:
-            song_title = match.groups()[0]
-            return song_title.strip()
-    raise ValueError("Invalid song file name")
-
-
-def parse_folder_name(path: str) -> Dict[str, str]:
-    # Order matters: the first one found is the first one used
-    validator_regexes = [
-        (r"^(.+)\(.+\)$", ("album",)),
-        (r"^([A-z0-9 ]+).*?(\d+).*?([A-z0-9 ]+)$", ("artist", "year", "album")),
-        (r"^(.+)$", ("album",)),
-    ]
-    validator: Tuple[str, Tuple]
-    for validator in validator_regexes:
-        match = re.search(validator[0], path)
-        if match:
-            results = {}
-            for name, value in zip(validator[1], match.groups()):
-                results[name] = value.strip()
-            return results
-    raise ValueError("Unrecognizable folder name")
-
-
-def extension(file: str):
-    """Returns the extension without the leading dot (e.g. `flac`)"""
-    ext = file.rsplit(".", 1)[-1]
-    return ext
+                break
