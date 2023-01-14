@@ -1,4 +1,6 @@
----
-LIBRARY_DIR: /some/dir
-DB_FILE: /some/other/dir/library.db
-DISCOGS_PAT: 123notanactualpath
+LIBRARY_DIR: /home/absolute/path/to/dir
+DISCOGS_PAT: your-secret-token
+DB_FILE: /home/absolute/path/of/file/data.db
+S3_LIBRARY_BUCKET: mptreasury
+AWS_ACCESS_KEY: your-access-key
+AWS_SECRET_KEY: your-secret-key
