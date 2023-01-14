@@ -1,10 +1,10 @@
 import os
-from pathlib import Path
 import shutil
+from pathlib import Path
+
 import pytest
 
-from app import import_service
-from app import model
+from app import import_service, model
 
 
 @pytest.fixture
@@ -68,7 +68,7 @@ def song_with_non_ascii_album(tmp_path):
         title="Test Title",
         album_name="Ǹ Test Album",
         artist_name="Test Artist",
-        path=song_path,
+        local_path=song_path,
     )
     try:
         shutil.rmtree(tmp_path)
@@ -92,8 +92,8 @@ def test_copy_songs_to_music_folder_non_ascii_album(
     import_service.copy_songs_to_music_folder(
         [song_with_non_ascii_album], library_folder
     )
-    assert str(song_with_non_ascii_album.path).encode("ascii")
-    assert "/N Test Album/" in str(song_with_non_ascii_album.path)
+    assert str(song_with_non_ascii_album.local_path).encode("ascii")
+    assert "/N Test Album/" in str(song_with_non_ascii_album.local_path)
 
 
 # TODO: parametrize non-ASCII names
@@ -106,7 +106,7 @@ def song_with_non_ascii_title(tmp_path: Path):
         title="Ǹ Test Title",
         album_name="Test Album",
         artist_name="Test Artist",
-        path=song_path,
+        local_path=song_path,
     )
     try:
         shutil.rmtree(tmp_path)
@@ -121,5 +121,5 @@ def test_copy_songs_to_music_folder_non_ascii_title(
     import_service.copy_songs_to_music_folder(
         [song_with_non_ascii_title], library_folder
     )
-    assert str(song_with_non_ascii_title.path).encode("ascii")
-    assert str(song_with_non_ascii_title.path).endswith("/N Test Title.flac")
+    assert str(song_with_non_ascii_title.local_path).encode("ascii")
+    assert str(song_with_non_ascii_title.local_path).endswith("/N Test Title.flac")

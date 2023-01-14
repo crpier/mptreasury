@@ -1,20 +1,16 @@
-from enum import StrEnum
+import logging
 import os
 import shutil
-from pathlib import Path
-import unicodedata
 import typing
+import unicodedata
+from enum import StrEnum
+from pathlib import Path
 
-from app import db, discogs_adapter
-from app.model import CueParser, RawAlbum, Album, Song
-from app import constants
-from app import config
-
-
-from fuzzywuzzy import fuzz  # type: ignore
 from discogs_client import models as discogs_models
+from fuzzywuzzy import fuzz  # type: ignore
 
-import logging
+from app import config, constants, db, discogs_adapter
+from app.model import Album, CueParser, RawAlbum, Song
 
 logger = logging.getLogger("mptreasury")
 
@@ -57,7 +53,7 @@ def copy_songs_to_music_folder(songs: list[Song], library_folder: Path):
         )
         target_folder_path = Path(normalized_target_folder_name)
         normalized_song_file_name = (
-            unicodedata.normalize("NFKD", f"{song.title}{song.path.suffix}")
+            unicodedata.normalize("NFKD", f"{song.title}{song.local_path.suffix}")
             .encode("ascii", "ignore")
             .decode()
         )
@@ -65,8 +61,8 @@ def copy_songs_to_music_folder(songs: list[Song], library_folder: Path):
         if not target_folder_path.exists():
             os.makedirs(target_folder_path)
         target_path = target_folder_path / normalized_song_file_name
-        shutil.copy(song.path, target_path)
-        song.path = target_path
+        shutil.copy(song.local_path, target_path)
+        song.local_path = target_path
 
 
 # TODO: this is quite the convoluted piece of logic. do some renames and add a dataclass for these triplets maybe?
@@ -128,7 +124,7 @@ def load_discogs_album_into_raw_album(
             raise ValueError("weird, a song from the raw album disappeared")
         new_song = Song(
             title=potential_track,
-            path=raw_song.path,
+            local_path=raw_song.path,
             album_name=album_res.title,  # type: ignore
             artist_name=album_res.artists[0].name,  # type: ignore
             album=new_album,
@@ -140,6 +136,7 @@ def load_discogs_album_into_raw_album(
         db.add_album_and_songs(new_album, new_songs, session)
     else:
         logger.info("Album %s already in db with id: %s", new_album.name, id)
+    return new_album, new_songs
 
 
 def import_folder(
@@ -179,11 +176,11 @@ def import_folder(
             )
             logger.info("Candidate %s: %s by %s - %s with score %s", i, album_res.title, album_res.artists[0].name, album_res.id, overall_score)  # type: ignore
             if overall_score >= constants.MINIMUM_MATCHING_ALBUM_SCORE:
-                load_discogs_album_into_raw_album(
+                album, songs = load_discogs_album_into_raw_album(
                     album_res=album_res,
                     raw_album=raw_album,
                     match_triplets=match_triplets,
                     root_music_path=root_music_path,
                     session=Session,
                 )
-                break
+                return album, songs

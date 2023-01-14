@@ -133,21 +133,6 @@ files = [
 ]
 
 [[package]]
-name = "commonmark"
-version = "0.9.1"
-description = "Python parser for the CommonMark Markdown spec"
-category = "dev"
-optional = false
-python-versions = "*"
-files = [
-    {file = "commonmark-0.9.1-py2.py3-none-any.whl", hash = "sha256:da2f38c92590f83de410ba1a3cbceafbc74fee9def35f9251ba9a971d6d66fd9"},
-    {file = "commonmark-0.9.1.tar.gz", hash = "sha256:452f9dc859be7f06631ddcb328b6919c67984aca654e5fefb3914d54691aed60"},
-]
-
-[package.extras]
-test = ["flake8 (==3.7.8)", "hypothesis (==3.55.3)"]
-
-[[package]]
 name = "cueparser"
 version = "1.0.0"
 description = "Simple cue file parser."
@@ -157,34 +142,6 @@ python-versions = "*"
 files = [
     {file = "CueParser-1.0.0-py2.py3-none-any.whl", hash = "sha256:dd91e9e9d9e6527b4b7c8a74037144c026dc1a61e7247c72c4eab3b584cb916c"},
     {file = "CueParser-1.0.0.tar.gz", hash = "sha256:2a33d51652a0ad87348975fb314610ef39066a2ae64e89739eaaea33d058e085"},
-]
-
-[[package]]
-name = "debugpy"
-version = "1.6.5"
-description = "An implementation of the Debug Adapter Protocol for Python"
-category = "dev"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "debugpy-1.6.5-cp310-cp310-macosx_11_0_x86_64.whl", hash = "sha256:696165f021a6a17da08163eaae84f3faf5d8be68fb78cd78488dd347e625279c"},
-    {file = "debugpy-1.6.5-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:17039e392d6f38388a68bd02c5f823b32a92142a851e96ba3ec52aeb1ce9d900"},
-    {file = "debugpy-1.6.5-cp310-cp310-win32.whl", hash = "sha256:62a06eb78378292ba6c427d861246574dc8b84471904973797b29dd33c7c2495"},
-    {file = "debugpy-1.6.5-cp310-cp310-win_amd64.whl", hash = "sha256:9984fc00ab372c97f63786c400107f54224663ea293daab7b365a5b821d26309"},
-    {file = "debugpy-1.6.5-cp37-cp37m-macosx_10_15_x86_64.whl", hash = "sha256:048368f121c08b00bbded161e8583817af5055982d2722450a69efe2051621c2"},
-    {file = "debugpy-1.6.5-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:74e4eca42055759032e3f1909d1374ba1d729143e0c2729bb8cb5e8b5807c458"},
-    {file = "debugpy-1.6.5-cp37-cp37m-win32.whl", hash = "sha256:0f9afcc8cad6424695f3356dc9a7406d5b18e37ee2e73f34792881a44b02cc50"},
-    {file = "debugpy-1.6.5-cp37-cp37m-win_amd64.whl", hash = "sha256:b5a74ecebe5253344501d9b23f74459c46428b30437fa9254cfb8cb129943242"},
-    {file = "debugpy-1.6.5-cp38-cp38-macosx_10_15_x86_64.whl", hash = "sha256:9e809ef787802c808995e5b6ade714a25fa187f892b41a412d418a15a9c4a432"},
-    {file = "debugpy-1.6.5-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:947c686e8adb46726f3d5f19854f6aebf66c2edb91225643c7f44b40b064a235"},
-    {file = "debugpy-1.6.5-cp38-cp38-win32.whl", hash = "sha256:377391341c4b86f403d93e467da8e2d05c22b683f08f9af3e16d980165b06b90"},
-    {file = "debugpy-1.6.5-cp38-cp38-win_amd64.whl", hash = "sha256:286ae0c2def18ee0dc8a61fa76d51039ca8c11485b6ed3ef83e3efe8a23926ae"},
-    {file = "debugpy-1.6.5-cp39-cp39-macosx_11_0_x86_64.whl", hash = "sha256:500dd4a9ff818f5c52dddb4a608c7de5371c2d7d905c505eb745556c579a9f11"},
-    {file = "debugpy-1.6.5-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8f3fab217fe7e2acb2d90732af1a871947def4e2b6654945ba1ebd94bd0bea26"},
-    {file = "debugpy-1.6.5-cp39-cp39-win32.whl", hash = "sha256:15bc5febe0edc79726517b1f8d57d7ac7c784567b5ba804aab8b1c9d07a57018"},
-    {file = "debugpy-1.6.5-cp39-cp39-win_amd64.whl", hash = "sha256:7e84d9e4420122384cb2cc762a00b4e17cbf998022890f89b195ce178f78ff47"},
-    {file = "debugpy-1.6.5-py2.py3-none-any.whl", hash = "sha256:8116e40a1cd0593bd2aba01d4d560ee08f018da8e8fbd4cbd24ff09b5f0e41ef"},
-    {file = "debugpy-1.6.5.zip", hash = "sha256:5e55e6c79e215239dd0794ee0bf655412b934735a58e9d705e5c544f596f1603"},
 ]
 
 [[package]]
@@ -328,22 +285,22 @@ files = [
 ]
 
 [[package]]
-name = "jinja2"
-version = "3.1.2"
-description = "A very fast and expressive template engine."
+name = "isort"
+version = "5.11.4"
+description = "A Python utility / library to sort Python imports."
 category = "dev"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.7.0"
 files = [
-    {file = "Jinja2-3.1.2-py3-none-any.whl", hash = "sha256:6088930bfe239f0e6710546ab9c19c9ef35e29792895fed6e6e31a023a182a61"},
-    {file = "Jinja2-3.1.2.tar.gz", hash = "sha256:31351a702a408a9e7595a8fc6150fc3f43bb6bf7e319770cbc0db9df9437e852"},
+    {file = "isort-5.11.4-py3-none-any.whl", hash = "sha256:c033fd0edb91000a7f09527fe5c75321878f98322a77ddcc81adbd83724afb7b"},
+    {file = "isort-5.11.4.tar.gz", hash = "sha256:6db30c5ded9815d813932c04c2f85a360bcdd35fed496f4d8f35495ef0a261b6"},
 ]
 
-[package.dependencies]
-MarkupSafe = ">=2.0"
-
 [package.extras]
-i18n = ["Babel (>=2.7)"]
+colors = ["colorama (>=0.4.3,<0.5.0)"]
+pipfile-deprecated-finder = ["pipreqs", "requirementslib"]
+plugins = ["setuptools"]
+requirements-deprecated-finder = ["pip-api", "pipreqs"]
 
 [[package]]
 name = "jmespath"
@@ -426,46 +383,6 @@ files = [
     {file = "MarkupSafe-2.1.1-cp39-cp39-win_amd64.whl", hash = "sha256:46d00d6cfecdde84d40e572d63735ef81423ad31184100411e6e3388d405e247"},
     {file = "MarkupSafe-2.1.1.tar.gz", hash = "sha256:7f91197cc9e48f989d12e4e6fbc46495c446636dfc81b9ccf50bb0ec74b91d4b"},
 ]
-
-[[package]]
-name = "memray"
-version = "1.5.0"
-description = "A memory profiler for Python applications"
-category = "dev"
-optional = false
-python-versions = ">=3.7.0"
-files = [
-    {file = "memray-1.5.0-cp310-cp310-macosx_10_14_x86_64.whl", hash = "sha256:20103313ebaf984f5f02568b4d7e15ff2050f685911c8a6513378576ffbc805f"},
-    {file = "memray-1.5.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:5a846ab9ad113531d4aae1daa4f33f9060f769bd4baf975610bd81771e7a40e2"},
-    {file = "memray-1.5.0-cp310-cp310-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:981fc578766b61f33a966187eedaba8fc3c943547059862a12393118aad31387"},
-    {file = "memray-1.5.0-cp310-cp310-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:4a60fdb1b9d8b0265a3d3e52e9a7a638dc89223ac7a976f5aad8b316685492bd"},
-    {file = "memray-1.5.0-cp311-cp311-macosx_10_14_x86_64.whl", hash = "sha256:f57d7a6e9662e9b8549ead448b0726c4e97e6e4dbe7fa5f76b21f08cfbd96798"},
-    {file = "memray-1.5.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:598bd3f4d155e993e4085571f1bdebf1765c32d9967d16e38ace0f00c424a789"},
-    {file = "memray-1.5.0-cp311-cp311-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:5ebb454b3fc63d21951c0c0caefa39c0b5291b4b9c078d58859a632984c54c32"},
-    {file = "memray-1.5.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ecdd892fe236bddb31ad80853cdddd8065ddca7cdc0515e669aea970f41b045f"},
-    {file = "memray-1.5.0-cp37-cp37m-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:93ec9ab0b1a2d0528371d91b7508ae449a6e48e1fab1f9ad1649b098e3375ab9"},
-    {file = "memray-1.5.0-cp37-cp37m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:c6f7480ff3607d67632223f9e9529c2f3db445c2dfd5146d763fd1b68519c647"},
-    {file = "memray-1.5.0-cp38-cp38-macosx_10_14_x86_64.whl", hash = "sha256:59b72717142cee554e237d8b93cea28c390b8c8fad7de2ce29db511dc2bc0ac4"},
-    {file = "memray-1.5.0-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:cc3f62eb3ca40987c61066dece6f9d5f7d82c52a4bda8e85c51734cd7e1a0198"},
-    {file = "memray-1.5.0-cp38-cp38-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:21993a1ae9819d5d434b792e4ead453d8edcb27cadf8dc236942be1e7062fced"},
-    {file = "memray-1.5.0-cp38-cp38-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:fff91fe61fa448a5508ebc9c87c1eeaa1368d3a94df586e56a0f4cbf1e0dc204"},
-    {file = "memray-1.5.0-cp39-cp39-macosx_10_14_x86_64.whl", hash = "sha256:76049c633c7280c4518f8b8e869ba422b98754b0795a2f79c12ee1749d15b702"},
-    {file = "memray-1.5.0-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:ae33047088b8569965aee64e3ce8aa16092f847557a8f900f0e5a662789e4225"},
-    {file = "memray-1.5.0-cp39-cp39-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:52c6a73298e6ffa5c8304afd33f9f85dd827a10d2fd040f31c29146fd71db438"},
-    {file = "memray-1.5.0-cp39-cp39-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:092e8a1fd120087f6e073a4f10c39ccdd4d73d98a3f19c9f51694329888eaf21"},
-    {file = "memray-1.5.0.tar.gz", hash = "sha256:2c2a1a6715f489e2780d110cfe4f6bb779658f000ca737483dde79f99d0dae12"},
-]
-
-[package.dependencies]
-jinja2 = "*"
-rich = ">=11.2.0"
-
-[package.extras]
-benchmark = ["asv"]
-dev = ["Cython", "asv", "black", "bump2version", "check-manifest", "flake8", "furo", "greenlet", "ipython", "isort", "mypy", "pytest", "pytest-cov", "sphinx", "sphinx-argparse", "towncrier"]
-docs = ["IPython", "bump2version", "furo", "sphinx", "sphinx-argparse", "towncrier"]
-lint = ["black", "check-manifest", "flake8", "isort", "mypy"]
-test = ["Cython", "greenlet", "ipython", "pytest", "pytest-cov"]
 
 [[package]]
 name = "mutagen"
@@ -641,21 +558,6 @@ dotenv = ["python-dotenv (>=0.10.4)"]
 email = ["email-validator (>=1.0.3)"]
 
 [[package]]
-name = "pygments"
-version = "2.14.0"
-description = "Pygments is a syntax highlighting package written in Python."
-category = "dev"
-optional = false
-python-versions = ">=3.6"
-files = [
-    {file = "Pygments-2.14.0-py3-none-any.whl", hash = "sha256:fa7bd7bd2771287c0de303af8bfdfc731f51bd2c6a47ab69d117138893b82717"},
-    {file = "Pygments-2.14.0.tar.gz", hash = "sha256:b3ed06a9e8ac9a9aae5a6f5dbe78a8a58655d17b43b93c078f094ddc476ae297"},
-]
-
-[package.extras]
-plugins = ["importlib-metadata"]
-
-[[package]]
 name = "pytest"
 version = "7.2.0"
 description = "pytest: simple powerful testing with Python"
@@ -678,27 +580,6 @@ tomli = {version = ">=1.0.0", markers = "python_version < \"3.11\""}
 
 [package.extras]
 testing = ["argcomplete", "hypothesis (>=3.56)", "mock", "nose", "pygments (>=2.7.2)", "requests", "xmlschema"]
-
-[[package]]
-name = "pytest-memray"
-version = "1.4.0"
-description = "A simple plugin to use with pytest"
-category = "dev"
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "pytest_memray-1.4.0-py3-none-any.whl", hash = "sha256:cbac61c0a278011e77d57f0afc72ae08de41e59600d2a3f5406874251ed89785"},
-    {file = "pytest_memray-1.4.0.tar.gz", hash = "sha256:7cafd374dbf0da2968852c20c6342df1fb2a334df842afd6f274af7722c7462c"},
-]
-
-[package.dependencies]
-memray = ">=1.4.1"
-pytest = ">=7.2"
-
-[package.extras]
-docs = ["furo (>=2022.9.29)", "sphinx (>=5.3)", "sphinx-argparse (>=0.4)", "sphinx-inline-tabs (>=2022.1.2b11)", "sphinxcontrib-programoutput (>=0.17)", "towncrier (>=22.8)"]
-lint = ["black (==22.10)", "flake8 (==6)", "isort (==5.10.1)", "mypy (==0.991)"]
-test = ["covdefaults (>=2.2)", "coverage (>=6.5)", "flaky (>=3.7)", "pytest (>=7.2)", "pytest-xdist (>=3.0.2)"]
 
 [[package]]
 name = "python-dateutil"
@@ -817,25 +698,6 @@ urllib3 = ">=1.21.1,<1.27"
 [package.extras]
 socks = ["PySocks (>=1.5.6,!=1.5.7)"]
 use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
-
-[[package]]
-name = "rich"
-version = "13.0.1"
-description = "Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal"
-category = "dev"
-optional = false
-python-versions = ">=3.7.0"
-files = [
-    {file = "rich-13.0.1-py3-none-any.whl", hash = "sha256:41fe1d05f433b0f4724cda8345219213d2bfa472ef56b2f64f415b5b94d51b04"},
-    {file = "rich-13.0.1.tar.gz", hash = "sha256:25f83363f636995627a99f6e4abc52ed0970ebbd544960cc63cbb43aaac3d6f0"},
-]
-
-[package.dependencies]
-commonmark = ">=0.9.0,<0.10.0"
-pygments = ">=2.6.0,<3.0.0"
-
-[package.extras]
-jupyter = ["ipywidgets (>=7.5.1,<8.0.0)"]
 
 [[package]]
 name = "s3transfer"
@@ -1018,4 +880,4 @@ socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "01e013495fa861631f55ed4f7be4e87e297f02c8361d24a37b517fcac918af59"
+content-hash = "e6fd46dda166f2c8178fa0dd01cbf0b03f6d588963ef78702ee281fc2cfd9864"

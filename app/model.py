@@ -1,14 +1,12 @@
+import os
 import random
 import re
-import os
 from pathlib import Path
 from typing import List, Optional
 
-from app import constants
-from app import config
-
-
 from deflacue import deflacue  # type: ignore
+
+from app import bootstrap, config, constants
 
 
 class RawSong:
@@ -35,11 +33,13 @@ class CueParser:
         if len(cue_files) != 1:
             raise NotImplementedError("Cannot parse multiple cue files")
         cue_file = Path(cue_folder / cue_files[0])
-        with cue_file.open() as f:
+        with cue_file.open("rb") as f:
             album_name = ""
             artist_name = ""
             details = ""
-            while line := f.readline():
+            # TODO: register a custom error handler for decoding: for example \x96 is almost like a dash, and should be replaced with dash
+            # TODO: when a parsing error ocurred, we should also update the CUE file (or maybe deflacue should fix this?)
+            while line := f.readline().decode(errors="ignore"):
                 if line.startswith("TITLE"):
                     album_name = line.split(" ", 1)[1].replace("\n", "").strip('"')
                 if line.startswith("PERFORMER"):
@@ -49,25 +49,23 @@ class CueParser:
         return album_name, artist_name, details
 
     def split_songs(self, cue_folder: Path, album_name: str, artist_name: str):
+        # TODO: mb we should check that sox libsox-fmt-all are installed before trying anythin
         d = deflacue.Deflacue(cue_folder, dest_path=self._config.CACHE_FOLDER)
         d.do()
-        partial_path = Path(
-            self._config.CACHE_FOLDER / cue_folder.name 
-        )
+        partial_path = Path(self._config.CACHE_FOLDER / cue_folder.name)
         return self._get_folder_with_songs(partial_path)
 
     def _get_folder_with_songs(self, start_folder: Path):
         subfolders = []
         for res in os.listdir(start_folder):
-            file = start_folder/ res
+            file = start_folder / res
             if file.suffix in constants.ALL_MUSIC_EXTENSIONS:
                 return start_folder
             elif file.is_dir():
                 subfolders.append(file)
-        if len(subfolders) > 1:
-            raise ValueError("deflacue folder has incorrect behavior")
+        if len(subfolders) != 1:
+            raise ValueError("Something is wrong with deflacue")
         return self._get_folder_with_songs(subfolders[0])
-
 
 
 class RawAlbum:
@@ -93,7 +91,8 @@ class RawAlbum:
             song.artist_name = self.artist_name
             self.songs.append(song)
 
-    def _get_data_from_album_folder_name(self, folder_name: str):
+    @staticmethod
+    def _get_data_from_album_folder_name(folder_name: str):
         album_name = folder_name
         artist_name = ""
         details = ""
@@ -103,6 +102,14 @@ class RawAlbum:
             folder_name = folder_name.replace(details, "")
             # strip the parentheses
             details = details.strip("()").strip()
+        # Usual details like year, label, edition can also be found in brackets
+        # Based on some subjective observation, brackets tend to have more importance;
+        # thus, they gain priority in setting details
+        if match := re.match(r".*?(\[.*\])", folder_name):
+            details = match.groups()[0].strip()
+            folder_name = folder_name.replace(details, "")
+            # strip the parentheses
+            details = details.strip("[]").strip()
         # if there's a year in the name we want it removed
         folder_name = re.sub(r"\d\d\d\d", "", folder_name)
         if "-" in folder_name:
@@ -125,12 +132,11 @@ class RawAlbum:
             if file.suffix == ".cue":
                 has_cue = True
             elif file.suffix in constants.ALL_MUSIC_EXTENSIONS:
-                songs_count = 0
-        if has_cue and songs_count > 1:
+                songs_count += 1
+        if has_cue and songs_count > 0:
             return True
         else:
             return False
-
 
     def _gather_songs(self, path: Path) -> list[RawSong]:
         raw_songs: list[RawSong] = []
@@ -202,11 +208,12 @@ class Song:
         # track_number: int,
         # genre: str,
         # released: datetime.datetime,
-        path: Path,
         # album_id: int,
         album_name: str,
         # artist_id: int,
         artist_name: str,
+        local_path: Path | None = None,
+        remote_path: Path | None = None,
         album: Optional[Album] = None,
         id: Optional[int] = None,
     ):
@@ -216,7 +223,12 @@ class Song:
         # self.released = released
         """TODO: custom type that ensures
         - optionally, has a prefix"""
-        self.path = path.absolute()
+        if local_path:
+            self.local_path = local_path
+        if remote_path:
+            self.remote_path = remote_path
+        else:
+            self.remote_path = None
         # self.album_id = album_id
         self.album_name = album_name
         # self.artist_id = artist_id
@@ -229,7 +241,7 @@ class Song:
             title=self.title,
             album_name=self.album_name,
             artist_name=self.artist_name,
-            path=str(self.path),
+            path=str(self.local_path),
         )
 
 

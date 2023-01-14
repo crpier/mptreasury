@@ -1,7 +1,7 @@
+import os
 from enum import Enum
 from pathlib import Path
-from typing import Optional, Any
-import os
+from typing import Any, Optional
 
 from pydantic import BaseSettings
 from pydantic.typing import StrPath
@@ -13,15 +13,19 @@ class APP_ENV(str, Enum):
 
 
 class Config(BaseSettings):
-    #TODO: validate paths
+    # TODO: validate paths
     LIBRARY_DIR: Path
     DISCOGS_PAT: str
     DB_FILE: Optional[Path]
     # TODO: figure out why pydantic breaks when I use an enum with default value
     # APP_ENV: APP_ENV = APP_ENV.production
     APP_ENV: str = "prod"
+    # TODO: can I remove this from initial declaration?
     DB_URI: str = ""
     CACHE_FOLDER: Path = Path("~/.cache/mptreasury").expanduser()
+    S3_LIBRARY_BUCKET: str
+    AWS_ACCESS_KEY: str
+    AWS_SECRET_KEY: str
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)

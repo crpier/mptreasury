@@ -1,13 +1,13 @@
 from pathlib import Path
 from typing import Any, List
 
-from sqlalchemy import MetaData, create_engine, select, types, and_
+from sqlalchemy import MetaData, and_, create_engine, select, types
 from sqlalchemy.orm import registry, sessionmaker
 from sqlalchemy.sql.elements import and_
 from sqlalchemy.sql.schema import Column, Table
 from sqlalchemy.sql.sqltypes import Integer, String
-from app.config import Config
 
+from app.config import Config
 from app.model import Album, Song
 
 
@@ -15,9 +15,13 @@ class PathType(types.TypeDecorator):
     impl = String
 
     def process_bind_param(self, value: Path, dialect) -> Any:
+        if value is None:
+            return None
         return str(value)
 
-    def process_result_value(self, value: str, dialect) -> Path:
+    def process_result_value(self, value: str, dialect) -> Path | None:
+        if value is None:
+            return None
         return Path(value)
 
 
@@ -27,7 +31,8 @@ songs_table = Table(
     mapper_registry.metadata,
     Column("id", Integer, primary_key=True, index=True),
     Column("title", String, index=True),
-    Column("path", PathType),
+    Column("local_path", PathType),
+    Column("remote_path", PathType),
     Column("album_name", String, index=True),
     Column("artist_name", String),
 )
@@ -112,25 +117,21 @@ def update_song_path(song: Song, Session):
                 and_(Song.title == song.title, Song.album_name == song.album_name)  # type: ignore
             )
         ).one()[0]
-        updated_song.path = song.path
+        updated_song.path = song.local_path
         session.commit()
 
 
 def get_songs(title: str, Session):
     with Session() as session:
         songs = session.execute(
-            select(Song).filter(
-                Song.title.contains(title)  # type: ignore
-            )
+            select(Song).filter(Song.title.contains(title))  # type: ignore
         ).all()
         return songs
 
 
-def get_songs_by_album(album_name: str, Session):
+def get_songs_by_album(album_name: str, Session) -> list[Song]:
     with Session() as session:
         songs = session.execute(
-            select(Song).filter(
-                Song.album_name.contains(album_name)  # type: ignore
-            )
+            select(Song).filter(Song.album_name.contains(album_name))  # type: ignore
         ).all()
-        return songs
+        return [song[0] for song in songs]

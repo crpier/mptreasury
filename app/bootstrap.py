@@ -1,11 +1,12 @@
+import logging
 import os
+import sys
 from pathlib import Path
-from app import config
+
 import yaml
 from yaml.loader import SafeLoader
 
-import sys
-import logging
+from app import config
 
 logger = logging.getLogger("mptreasury")
 logger.setLevel(logging.DEBUG)

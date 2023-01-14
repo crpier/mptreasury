@@ -23,9 +23,7 @@ sqlalchemy = "^1.4.46"
 [tool.poetry.group.dev.dependencies]
 mypy = "^0.991"
 pytest = "^7.1.1"
-pytest-memray = "^1.0.0"
-memray = "^1.0.3"
-debugpy = "^1.6.0"
+isort = "^5.11.4"
 
 
 [build-system]

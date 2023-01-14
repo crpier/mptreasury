@@ -10,7 +10,6 @@ from mutagen.easyid3 import EasyID3
 from app import discogs_adapter, import_service, test_utils
 from app.conftest import memory_session
 from app.model import Song
-from app import test_utils
 
 
 @pytest.fixture
@@ -46,7 +45,7 @@ def src_and_dest_folders():
 def test_import_e2e(basic_song_list: List[Song], memory_session, src_and_dest_folders):
     music_path, dest_folder = src_and_dest_folders
     tracklist = [song.title for song in basic_song_list]
-    file_names = [os.path.basename(song.path) for song in basic_song_list]
+    file_names = [os.path.basename(song.local_path) for song in basic_song_list]
     fake_client = discogs_adapter.FakeDiscogsClient(tracklist)
     fake_metadata_retriever = discogs_adapter.DiscogsAdapter(fake_client)
     import_service.import_folder(

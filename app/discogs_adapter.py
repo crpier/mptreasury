@@ -1,6 +1,6 @@
 from typing import List, Protocol, Tuple
-import discogs_client
 
+import discogs_client
 import discogs_client.models as discogs_models
 from fuzzywuzzy import fuzz
 
@@ -127,7 +127,7 @@ class DiscogsAdapter:
                     raise ValueError("weird, a song from the raw album disappeared")
                 new_song = Song(
                     title=potential_track,
-                    path=raw_song.path,
+                    local_path=raw_song.path,
                     album_name=album_res.title,  # type: ignore
                     artist_name=album_res.artists[0].name,  # type: ignore
                     album=new_album,
