@@ -2,24 +2,40 @@
 name = "mptreasury"
 version = "0.1.0"
 description = ""
-authors = ["crpier42 <crpier42@gmail.com>"]
-readme = "README.md"
+authors = ["crpier <crpier42@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.12"
-pydantic = "^2.4.2"
-icecream = "^2.1.3"
-loguru = "^0.7.2"
-tqdm = "^4.66.1"
-result = "^0.13.1"
-black = "^23.10.1"
-mypy = "^1.6.1"
-
+python = "^3.10"
+pydantic = "^1.9.0"
+alembic = "^1.7.7"
+sqlalchemy2-stubs = "^0.0.2-alpha.22"
+python3-discogs-client = "^2.3.14"
+fuzzywuzzy = "^0.18.0"
+python-Levenshtein = "^0.12.2"
+mutagen = "^1.45.1"
+click = "^8.1.3"
+PyYAML = "^6.0"
+boto3 = "^1.24.84"
+deflacue = "^2.0.1"
+cueparser = "^1.0.0"
+sqlalchemy = "^1.4.46"
 
 [tool.poetry.group.dev.dependencies]
-ruff = "^0.1.1"
-isort = "^5.12.0"
+mypy = "^0.991"
+pytest = "^7.1.1"
+isort = "^5.11.4"
+
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+log_cli = true
+log_cli_level = "INFO"
+markers = [
+  "unit: self explanatory I think",
+  "component: self explanatory I think",
+  "e2e: self explanatory I think",
+]
+
