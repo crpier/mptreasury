@@ -3,8 +3,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Optional
 
-from pydantic import BaseSettings
-from pydantic.typing import StrPath
+from pydantic_settings import BaseSettings
 
 
 class APP_ENV(str, Enum):
