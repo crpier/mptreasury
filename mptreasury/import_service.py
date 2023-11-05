@@ -6,12 +6,16 @@ import unicodedata
 from enum import StrEnum
 from pathlib import Path
 
-from discogs_client import models as discogs_models
+if typing.TYPE_CHECKING:
+    import discogs_client
+    from discogs_client import models as discogs_models
+
 from fuzzywuzzy import fuzz  # type: ignore
 from loguru import logger
 
-from app import config, constants, db, discogs_adapter
-from app.model import Album, CueParser, RawAlbum, Song
+from mptreasury import config, constants, db, discogs_adapter
+from mptreasury.model import Album, CueParser, RawAlbum, Song
+from mptreasury.utils import injection
 
 
 class FolderType(StrEnum):
@@ -99,7 +103,7 @@ def score_fuzzy_match_triplet(
 
 
 def load_discogs_album_into_raw_album(
-    album_res: discogs_models.Release,
+    album_res,
     raw_album: RawAlbum,
     match_triplets: typing.Any,
     root_music_path: Path,
@@ -138,13 +142,16 @@ def load_discogs_album_into_raw_album(
     return new_album, new_songs
 
 
+@injection.injectable_sync
 def import_folder(
     music_path: Path,
-    Session,
-    root_music_path: Path,
-    searcher: type[discogs_adapter.Searcher],
-    config: config.Config,
+    *,
+    discogs_client  = injection.Injected,
+    Session=injection.Injected,
+    config: config.Config = injection.Injected,
 ):
+    searcher = print
+    root_music_path = config.LIBRARY_DIR
     logger.info("Gonna look up in {}", music_path)
     folder_type = determine_folder_type(music_path)
     match folder_type:
