@@ -6,7 +6,7 @@ from typing import List, Optional
 
 from deflacue import deflacue  # type: ignore
 
-from mptreasury import config, constants
+from app import bootstrap, config, constants
 
 
 class RawSong:

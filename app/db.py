@@ -1,9 +1,10 @@
 import sqlite3
+import textwrap
 from pathlib import Path
-from typing import List
+from typing import Any, List
 
-from mptreasury.config import Config
-from mptreasury.model import Album, Song
+from app.config import Config
+from app.model import Album, Song
 
 
 def connect(db_file: Path):
@@ -42,7 +43,8 @@ def create_albums_table(conn: sqlite3.Connection):
     )
 
 
-def create_tables(conn: sqlite3.Connection):
+def create_tables(config: Config):
+    conn = connect(config.DB_FILE)
     create_songs_table(conn)
     create_albums_table(conn)
 
