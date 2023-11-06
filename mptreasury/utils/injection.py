@@ -66,18 +66,18 @@ def injectable_sync(func: Callable[_P, _T]) -> Callable[_P, _T]:
                         f"{func.__name__} must be keyword-only"
                     )
                     raise IncorrectInjectableSignatureError(msg)
+                # Don't inject the arg if it was provided to the function
                 if kwargs.get(name) is not None:
                     pass
-                elif sig.name in _LAZY_INJECTS:
-                    _INJECTS[sig.name] = _LAZY_INJECTS[sig.name]()
-                    del _LAZY_INJECTS[sig.name]
-                    kwargs.update({name: _INJECTS[sig.annotation]})
+                elif name in _LAZY_INJECTS:
+                    _INJECTS[name] = _LAZY_INJECTS[name]()
+                    del _LAZY_INJECTS[name]
+                    kwargs.update({name: _INJECTS[name]})
                 elif sig.name in _INJECTS:
-                    kwargs.update({name: _INJECTS[sig.annotation]})
+                    kwargs.update({name: _INJECTS[name]})
                 else:
                     msg = (
-                        "Missing dependency for "
-                        f"{name}: {sig.annotation} in {func.__name__}"
+                        f"Function {func.__name__} did not find {name} injected"
                     )
                     raise MissingDependencyError(msg)
         return func(*args, **kwargs)
