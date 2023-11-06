@@ -1,4 +1,3 @@
 # For creating sqlite DBs willy nilly lmao
 /*.db
 *.pyc
-.env
