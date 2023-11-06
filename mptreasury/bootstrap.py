@@ -1,5 +1,6 @@
 import warnings
 from functools import partial
+from sqlite3 import Connection
 
 from mptreasury import config, db
 from mptreasury.utils import injection
@@ -40,16 +41,6 @@ def bootstrap():
             return s3.meta.client
 
     injection.add_lazy_injectable("s3_client", partial(create_s3_client, conf))
-
-    def create_logger():
-        from loguru import logger
-        return logger
-    injection.add_lazy_injectable("logger", create_logger)
-
-    def create_fuzzy_wuzzy():
-        from fuzzywuzzy import fuzz
-        return fuzz
-    injection.add_lazy_injectable("fuzz", create_logger)
 
     conf.CACHE_FOLDER.mkdir(parents=True, exist_ok=True)
     return conf

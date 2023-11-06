@@ -5,7 +5,6 @@ import click
 from mptreasury import bootstrap, import_service
 
 
-
 @click.group()
 def main():
     pass
@@ -38,12 +37,20 @@ def import_dir(music_dir: str, upload_to_remote: bool):
 
 def import_action(import_path: Path, upload_to_remote: bool = False):
     try:
-        import_service.import_folder(
+        res = import_service.import_folder(
             music_path=import_path,
             config=config,
         )
     except ValueError as e:
         raise click.ClickException(str(e))
+    # if res:
+    #     _, songs = res
+    #     if upload_to_remote:
+    #         remote_storage_service.upload_local_songs(
+    #             songs=songs,
+    #             library_bucket=config.S3_LIBRARY_BUCKET,
+    #             s3_client=s3_client,
+    #         )
 
 
 if __name__ == "__main__":

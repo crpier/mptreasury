@@ -2,6 +2,7 @@ import sqlite3
 from pathlib import Path
 from typing import List
 
+from mptreasury.config import Config
 from mptreasury.model import Album, Song
 
 

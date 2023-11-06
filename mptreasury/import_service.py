@@ -6,6 +6,13 @@ import unicodedata
 from enum import StrEnum
 from pathlib import Path
 
+if typing.TYPE_CHECKING:
+    import discogs_client
+    from discogs_client import models as discogs_models
+
+from fuzzywuzzy import fuzz  # type: ignore
+from loguru import logger
+
 from mptreasury import config, constants, db, discogs_adapter
 from mptreasury.model import Album, CueParser, RawAlbum, Song
 from mptreasury.utils import injection
@@ -139,10 +146,9 @@ def load_discogs_album_into_raw_album(
 def import_folder(
     music_path: Path,
     *,
-    discogs_client=injection.Injected,
+    discogs_client  = injection.Injected,
+    Session=injection.Injected,
     config: config.Config = injection.Injected,
-    sql_conn = injection.Injected,
-    logger = injection.Injected,
 ):
     searcher = print
     root_music_path = config.LIBRARY_DIR
@@ -181,6 +187,6 @@ def import_folder(
                     raw_album=raw_album,
                     match_triplets=match_triplets,
                     root_music_path=root_music_path,
-                    session=conn,
+                    session=Session,
                 )
                 return album, songs
