@@ -1,12 +1,11 @@
 import os
-import random
 import re
 from pathlib import Path
 from typing import List, Optional
 
 from deflacue import deflacue  # type: ignore
 
-from app import bootstrap, config, constants
+from mptreasury.core import config, constants
 
 
 class RawSong:
@@ -157,8 +156,8 @@ class RawAlbum:
         return raw_songs
 
     def _parse_song_file_name(self, song_file: Path) -> str:
-        song_file_name = re.sub(r"^(\d+\w*-\w*)", "", str(song_file))
-        song_file_name.replace(song_file.suffix, "")
+        song_file_name = re.sub(r"^(\d+\w*[- ]*)", "", str(song_file))
+        song_file_name = song_file_name.replace(song_file.suffix, "")
         return song_file_name
 
     def song_by_title(self, title: str):

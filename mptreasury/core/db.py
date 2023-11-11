@@ -1,13 +1,12 @@
 from pathlib import Path
 from typing import Any, List
 
-from sqlalchemy import MetaData, and_, create_engine, select, types
+from sqlalchemy import MetaData, create_engine, select, types
 from sqlalchemy.orm import registry, sessionmaker
-from sqlalchemy.sql.elements import and_
 from sqlalchemy.sql.schema import Column, Table
 from sqlalchemy.sql.sqltypes import Integer, String
 
-from app.config import Config
+from mptreasury.core.config import Config
 from app.model import Album, Song
 
 
@@ -32,7 +31,7 @@ songs_table = Table(
     Column("id", Integer, primary_key=True, index=True),
     Column("title", String, index=True),
     Column("local_path", PathType),
-    Column("remote_path", PathType),
+    Column("remote_path", PathType, nullable=True),
     Column("album_name", String, index=True),
     Column("artist_name", String),
 )
@@ -56,12 +55,12 @@ mapper_registry.map_imperatively(Song, songs_table)
 master_engine = None
 
 
-def get_sessionmaker(settings: Config):
+def get_sessionmaker(config: Config):
     global master_engine
     # Not happy we init the engine here, but can't see a better way
     if not master_engine:
         # TODO: config option for echo
-        master_engine = create_engine(settings.DB_URI, echo=False)
+        master_engine = create_engine(config.db_uri(), echo=False)
     # TODO: I should remove the expire_on_commit arg and create function
     # that converts an sqlalchemy object instance to a model instance
     maker = sessionmaker(master_engine, expire_on_commit=False)

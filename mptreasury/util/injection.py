@@ -67,7 +67,7 @@ def injectable_sync(func: Callable[_P, _T]) -> Callable[_P, _T]:
                 else:
                     msg = (
                         "Missing dependency for "
-                        f"{name}: {sig.annotation} in {func.__name__}"
+                        f"{name}: {sig.annotation} in {func}"
                     )
                     raise MissingDependencyError(msg)
         return func(*args, **kwargs)

@@ -54,3 +54,6 @@ class Config:
             str, "AWS_SECRET_KEY", AWS_SECRET_KEY
         )
         self.SOCKET_PATH = from_env_or_from_var(Path, "SOCKET_PATH", SOCKET_PATH)
+
+    def db_uri(self):
+        return f"sqlite:///{self.DB_FILE}"

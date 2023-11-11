@@ -1,10 +1,11 @@
 from typing import List, Protocol, Tuple
 
-import discogs_client
 import discogs_client.models as discogs_models
+from discogs_client import Client
 from fuzzywuzzy import fuzz
 
 from app.model import Album, RawAlbum, Song
+from mptreasury.util.injection import Injected, injectable_sync
 
 
 # TODO: this is quite the convoluted piece of logic. unit test it I guess 🤷
@@ -138,24 +139,25 @@ class DiscogsAdapter:
         raise ValueError("could not populate album")
 
 
-class Searcher(Protocol):
-    def __init__(self, album_name: str, artist_name: str | None = None):
-        raise NotImplementedError()
+class SearchResults:
+    def __init__(self, results: discogs_models.MixedPaginatedList) -> None:
+        self._last_page_fetched = -1
+        self._results = results
 
     def next_page(self) -> list[discogs_models.Release]:
-        raise NotImplementedError()
+        self._last_page_fetched += 1
+        return self._results.page(self._last_page_fetched)
 
 
-def discogsLookupFactory(client: discogs_client.Client) -> type[Searcher]:
-    class DiscogsAlbumLookup:
-        def __init__(self, album_name: str, artist_name: str | None = None) -> None:
-            self._paginated_results = client.search(
-                album_name, type="release", artist_name=artist_name
-            )
-            self._last_page_fetched = 0
+class Searcher:
+    def __init__(self, client: Client = Injected) -> None:
+        self._client = client
 
-        def next_page(self) -> list[discogs_models.Release]:
-            self._last_page_fetched += 1
-            return self._paginated_results.page(self._last_page_fetched)
-
-    return DiscogsAlbumLookup
+    def search(
+        self,
+        album_name: str,
+        artist_name: str | None = None,
+    ) -> SearchResults:
+        return SearchResults(
+            self._client.search(album_name, type="release", artist=artist_name)
+        )

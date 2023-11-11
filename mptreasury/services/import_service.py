@@ -8,10 +8,13 @@ from pathlib import Path
 from discogs_client import models as discogs_models
 from fuzzywuzzy import fuzz  # type: ignore
 from loguru import logger
+from sqlalchemy.orm import Session
 
-from app import config, constants, db, discogs_adapter
 from app.model import Album, CueParser, RawAlbum, Song
-from mptreasury.util.injection import injectable_sync, Injected
+from mptreasury.adapters.discogs_adapter import Searcher
+from mptreasury.core import constants, db
+from mptreasury.core.config import Config
+from mptreasury.util.injection import Injected, injectable_sync
 
 
 class FolderType(StrEnum):
@@ -68,6 +71,9 @@ def copy_songs_to_music_folder(songs: list[Song], library_folder: Path):
 def fuzzy_match_tracks(actual_tracks: list[str], potential_matches: list[str]):
     # Triplets of actual track, potential match, matching score
     # Could this be dog 🤔
+
+    # create a copy of the list so that we can change it safely
+    actual_tracks = actual_tracks.copy()
     triplets: list[tuple[str, str, int]] = []
     for potential_match in potential_matches:
         if len(actual_tracks) == 0:
@@ -98,12 +104,14 @@ def score_fuzzy_match_triplet(
     return score_mean
 
 
+@injectable_sync
 def load_discogs_album_into_raw_album(
     album_res: discogs_models.Release,
     raw_album: RawAlbum,
     match_triplets: typing.Any,
-    root_music_path: Path,
-    session,
+    *,
+    session: Session = Injected,
+    config: Config = Injected,
 ):
     new_songs: list[Song] = []
     new_album = Album(
@@ -116,7 +124,7 @@ def load_discogs_album_into_raw_album(
         master_name=album_res.master.title,  # type: ignore
         master_provider_id=album_res.master.id,  # type: ignore
     )
-    logger.info("Loading songs from %s", raw_album.songs[0].path.parent)
+    logger.info("Loading songs from {}", raw_album.songs[0].path.parent)
     for actual_track, potential_track, _ in match_triplets:
         raw_song = raw_album.song_by_title(actual_track)
         if not raw_song:
@@ -130,11 +138,11 @@ def load_discogs_album_into_raw_album(
         )
         new_songs.append(new_song)
     if not (id := db.get_album_id(new_album, session)):
-        logger.info("Adding songs for %s to library", new_album.name)
-        copy_songs_to_music_folder(new_songs, root_music_path)
+        logger.info("Adding songs for {} to library", new_album.name)
+        copy_songs_to_music_folder(new_songs, config.LIBRARY_DIR)
         db.add_album_and_songs(new_album, new_songs, session)
     else:
-        logger.info("Album %s already in db with id: %s", new_album.name, id)
+        logger.info("Album {} already in db with id: {}", new_album.name, id)
     return new_album, new_songs
 
 
@@ -142,11 +150,11 @@ def load_discogs_album_into_raw_album(
 def import_folder(
     music_path: Path,
     *,
-    config: config.Config = Injected,
-    root_music_path: Path = Injected,
-    searcher: type[discogs_adapter.Searcher] = Injected,
-    Session = Injected,
+    config: Config = Injected,
+    searcher: Searcher = Injected,
+    Session: Session = Injected,
 ):
+    music_path = music_path.expanduser()
     logger.info("Gonna look up in {}", music_path)
     folder_type = determine_folder_type(music_path)
     match folder_type:
@@ -159,29 +167,42 @@ def import_folder(
                 raw_albums.append(RawAlbum(album_path, cue_parser=CueParser(config)))
 
     for raw_album in raw_albums:
+        raw_tracks = [track.title for track in raw_album.songs]
+        raw_tracks.sort()
         logger.info(
-            "Trying to import %s by %s from %s",
+            "Trying to import {} by {} from {}",
             raw_album.name,
             raw_album.artist_name,
             raw_album.music_path,
         )
-        search = searcher(
+        logger.info(
+            "Searching for album {} from {}", raw_album.name, raw_album.artist_name
+        )
+        search = searcher.search(
             album_name=raw_album.name,
             artist_name=raw_album.artist_name,
         )
         candidates = search.next_page()
         for i, album_res in zip(range(constants.MAX_GUESS_ATTEMPTS), candidates):
             discogs_tracks = [track.title for track in album_res.tracklist if track.fetch("type_") == "track"]  # type: ignore
+            discogs_tracks.sort()
             match_triplets, overall_score = fuzzy_match_tracks(
-                [track.title for track in raw_album.songs], discogs_tracks
+                raw_tracks, discogs_tracks
             )
-            logger.info("Candidate %s: %s by %s - %s with score %s", i, album_res.title, album_res.artists[0].name, album_res.id, overall_score)  # type: ignore
             if overall_score >= constants.MINIMUM_MATCHING_ALBUM_SCORE:
+                logger.info("Accepted candidate {}: {} by {} - {} with score {}", i, album_res.title, album_res.artists[0].name, album_res.id, overall_score)  # type: ignore
+                logger.info(
+                    "Attempting to import tracks: {}",
+                    raw_tracks,
+                )
+                logger.info("Accepted candidate tracks: {}", discogs_tracks)
                 album, songs = load_discogs_album_into_raw_album(
                     album_res=album_res,
                     raw_album=raw_album,
                     match_triplets=match_triplets,
-                    root_music_path=root_music_path,
                     session=Session,
                 )
                 return album, songs
+            else:
+                logger.info("Rejected candidate {}: {} by {} - {} with score {}", i, album_res.title, album_res.artists[0].name, album_res.id, overall_score)  # type: ignore
+        logger.info("No matching condidate was worthy. Exiting")
