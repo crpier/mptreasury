@@ -1,4 +1,3 @@
-import logging
 import os
 import shutil
 import typing
@@ -12,6 +11,7 @@ from loguru import logger
 
 from app import config, constants, db, discogs_adapter
 from app.model import Album, CueParser, RawAlbum, Song
+from mptreasury.util.injection import injectable_sync, Injected
 
 
 class FolderType(StrEnum):
@@ -138,12 +138,14 @@ def load_discogs_album_into_raw_album(
     return new_album, new_songs
 
 
+@injectable_sync
 def import_folder(
     music_path: Path,
-    Session,
-    root_music_path: Path,
-    searcher: type[discogs_adapter.Searcher],
-    config: config.Config,
+    *,
+    config: config.Config = Injected,
+    root_music_path: Path = Injected,
+    searcher: type[discogs_adapter.Searcher] = Injected,
+    Session = Injected,
 ):
     logger.info("Gonna look up in {}", music_path)
     folder_type = determine_folder_type(music_path)
